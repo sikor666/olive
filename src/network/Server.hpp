@@ -17,6 +17,7 @@ public:
     Server()
     {
         socket.bind(nullptr, BindPort);
+        //socket.unblock();
     }
 
     void run()
@@ -29,6 +30,7 @@ public:
         while (true)
         {
             std::string endpoint;
+            //auto n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
             auto n = socket.recv_from(buffer, endpoint);
         }
     }

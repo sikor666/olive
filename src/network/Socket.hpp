@@ -17,6 +17,7 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#include <fcntl.h>
 #endif
 
 #include <iostream>
@@ -100,6 +101,54 @@ public:
         {
             Throw("udp connect error for ", host, ":", serv);
         }
+    }
+
+    void unblock()
+    {
+#if defined _WIN32
+        int result;
+        u_long mode = 1;
+
+        result = ioctlsocket(sockfd, FIONBIO, &mode);
+        if (result != NO_ERROR)
+        {
+            Throw("ioctlsocket failed with error : ", result);
+        }
+#else
+        // 4Set socket nonblocking
+        int flags;
+
+        if ((flags = fcntl(sockfd, F_GETFL, 0)) == -1)
+        {
+            Throw("fcntl error: F_GETFL");
+        }
+
+        if ((flags = fcntl(sockfd, F_SETFL, flags | O_NONBLOCK)) == -1)
+        {
+            Throw("fcntl error: F_SETFL");
+        }
+#endif
+    }
+
+    bool ready() // read from socket
+    {
+        fd_set rset;
+        timeval time;
+        time.tv_sec = 0;
+        time.tv_usec = 0;
+
+        int maxfdp1 = sockfd + 1;
+
+        FD_ZERO(&rset);
+        FD_SET(sockfd, &rset);
+
+        int n;
+        if ((n = select(maxfdp1, &rset, NULL, NULL, &time)) < 0)
+        {
+            Throw("select error");
+        }
+
+        return FD_ISSET(sockfd, &rset);
     }
 
     int recv_from(Buffer& buffer, std::string& endpoint)
@@ -306,7 +355,7 @@ private:
     int udp_mcast_client(const char *host, const char *serv)
     {
         char ttl = 1;
-        sockaddr_in cliAddr;
+        sockaddr_in cliaddr;
         hostent *h;
 
         h = gethostbyname(host);
@@ -333,10 +382,10 @@ private:
         }
 
         // bind any port number
-        cliAddr.sin_family = AF_INET;
-        cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-        cliAddr.sin_port = htons(0);
-        if (::bind(sockfd, (sockaddr *)&cliAddr, sizeof(cliAddr)) < 0)
+        cliaddr.sin_family = AF_INET;
+        cliaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        cliaddr.sin_port = htons(0);
+        if (::bind(sockfd, (sockaddr *)&cliaddr, sizeof(cliaddr)) < 0)
         {
             Throw("bind error");
         }
