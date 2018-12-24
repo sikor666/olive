@@ -8,15 +8,12 @@ enum class Action : int
     StunBindingRequest
 };
 
-constexpr auto StunAddr = "216.93.246.18";
-constexpr auto StunPort = "3478";
-
 class Client
 {
 public:
-    Client()
+    void connect(const char *host, const char *serv)
     {
-        socket.connect(StunAddr, StunPort);
+        socket.connect(host, serv);
     }
 
     void send(Action action)
@@ -33,7 +30,12 @@ public:
         std::string endpoint;
         auto n = socket.recv_from(buffer, endpoint);
 
-        stun.parseResponse(buffer, n);
+        auto response = stun.parseResponse(buffer, n);
+    }
+
+    void disconnect()
+    {
+        socket.disconnect();
     }
 
 private:

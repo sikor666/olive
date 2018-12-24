@@ -145,6 +145,12 @@ struct StunAddrVariable
 };
 #pragma pack (pop)
 
+struct StunResponse
+{
+    short port;
+    std::string address;
+};
+
 class Stun
 {
 public:
@@ -169,8 +175,9 @@ public:
         return buffer;
     }
 
-    void parseResponse(UDP::Buffer& recvline, size_t n)
+    StunResponse parseResponse(UDP::Buffer& recvline, size_t n)
     {
+        StunResponse response;
         StunHeader header;
 
         char variable[UDP::MAX_LINE];
@@ -226,6 +233,13 @@ public:
                     if (inet_ntop(AF_INET, &addr, str, sizeof(str)) != nullptr)
                     {
                         std::cout << "\t address: " << str << std::endl;
+
+                        if (type == AttributeType::XorMappedAddress ||
+                            type == AttributeType::XorMappedAddress2)
+                        {
+                            response.port = port;
+                            response.address = str;
+                        }
                     }
                 }
 
@@ -236,5 +250,7 @@ public:
                 break;
             }
         }
+
+        return response;
     }
 };

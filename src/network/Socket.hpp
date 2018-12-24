@@ -5,6 +5,7 @@
 #include <iphlpapi.h>
 #include <afunix.h>
 #define bzero(ptr,n) memset(ptr, 0, n)
+#define close(fd) closesocket(fd)
 #else
 #include <sys/socket.h> // basic socket definitions
 #include <netinet/in.h> // sockaddr_in{} and other Internet defns
@@ -151,6 +152,11 @@ public:
         {
             Throw("send error");
         }
+    }
+
+    void disconnect()
+    {
+        close_socket(sockfd);
     }
 
 private:
@@ -488,10 +494,15 @@ private:
 
     void close_socket(int fd)
     {
-        if (shutdown(fd, 2) != 0) //win: SD_BOTH, unix: SHUT_RDWR
+        if (close(fd) != 0)
+        {
+            Throw("socket close error");
+        }
+
+        /*if (shutdown(fd, 2) != 0) //win: SD_BOTH, unix: SHUT_RDWR
         {
             Throw("socket shutdown error");
-        }
+        }*/
     }
 
 private:
