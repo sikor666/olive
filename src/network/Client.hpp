@@ -1,46 +1,46 @@
 #pragma once
 
-#include "Socket.hpp"
 #include "Stun.hpp"
+#include "Serv.hpp"
+#include "Translator.hpp"
 
-enum class Action : int
-{
-    StunBindingRequest
-};
+#include <queue>
+#include <list>
+#include <memory>
 
 class Client
 {
 public:
-    void connect(const char *host, const char *serv)
+    Client()
     {
-        socket.connect(host, serv);
+        nodes.push_back(std::make_unique<Stun>(StunAddr, StunPort));
     }
 
-    void send(Action action)
+    void run()
     {
-        if (action == Action::StunBindingRequest)
+        if (!nodes.empty())
         {
-            auto request = stun.createRequest();
-            socket.send_to(request.data(), request.size());
+            auto node = nodes.front().get();
+            auto response = node->poll();
+
+            if (response)
+            {
+                if (response->origin() == Origin::Stun)
+                {
+                    auto stunr = dynamic_cast<StunResponse *>(response.get());
+
+                    nodes.push_back(std::make_unique<Serv>
+                        (ServAddr, ServPort, stunr->address, stunr->port));
+
+                    //nodes.pop_front();
+                }
+            }
         }
     }
 
-    void receive()
-    {
-        std::string endpoint;
-        auto n = socket.recv_from(buffer, endpoint);
-
-        auto response = stun.parseResponse(buffer, n);
-    }
-
-    void disconnect()
-    {
-        socket.disconnect();
-    }
 
 private:
-    Stun stun;
+    Translator translator;
 
-    UDP::Socket socket;
-    UDP::Buffer buffer;
+    Nodes nodes;
 };

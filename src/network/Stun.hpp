@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Socket.hpp"
+#include "INode.hpp"
+
 #include "Protocol.hpp"
+#include "Socket.hpp"
 
 #include <iostream>
 #include <map>
@@ -56,6 +58,9 @@
 //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //|                      X-Address (Variable)                  ....
 //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+namespace
+{
 
 enum class AttributeType : u_short
 {
@@ -145,15 +150,67 @@ struct StunAddrVariable
 };
 #pragma pack (pop)
 
-struct StunResponse
-{
-    short port;
-    std::string address;
-};
+} // namespace
 
-class Stun
+class StunResponse final : public IResponse
 {
 public:
+    std::string port;
+    std::string address;
+
+    virtual Origin origin() override
+    {
+        return Origin::Stun;
+    }
+};
+
+class Stun final : public INode
+{
+public:
+    Stun(const char *host_, const char *port_) :
+        host{ host_ },
+        port{ port_ },
+        state{static_cast<State>(0)}
+    {
+    }
+
+    virtual std::unique_ptr<IResponse> poll() override
+    {
+        int n = 0;
+
+        if (state == static_cast<State>(0))
+        {
+            //std::cout << "State 0" << std::endl;
+
+            socket.connect(host, port);
+            socket.unblock();
+
+            auto request = createRequest();
+            socket.send_to(request.data(), request.size());
+
+            state = State::Send;
+        }
+        else if (state == static_cast<State>(1))
+        {
+            //std::cout << "State 1" << std::endl;
+
+            std::string endpoint;
+            n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                auto response = parseResponse({ buffer, buffer + n });
+                state = State::Recv;
+                //socket.disconnect();
+
+                return response;
+            }
+        }
+
+        return {};
+    }
+
+private:
     Buffer createRequest()
     {
         StunHeader header;
@@ -175,27 +232,26 @@ public:
         return buffer;
     }
 
-    StunResponse parseResponse(UDP::Buffer& recvline, size_t n)
+    std::unique_ptr<StunResponse> parseResponse(Buffer&& recvline)
     {
-        StunResponse response;
         StunHeader header;
 
         char variable[UDP::MAX_LINE];
 
         size_t offset = 0;
-        memcpy(reinterpret_cast<void *>(&header), recvline, sizeof(header));
+        memcpy(reinterpret_cast<void *>(&header), recvline.data(), sizeof(header));
         offset += sizeof(header);
 
-        while (n > offset)
+        while (recvline.size() > offset)
         {
             StunAttribute attribute;
-            memcpy(reinterpret_cast<char *>(&attribute), recvline + offset, sizeof(attribute));
+            memcpy(reinterpret_cast<char *>(&attribute), recvline.data() + offset, sizeof(attribute));
             offset += sizeof(attribute);
 
             auto type = static_cast<AttributeType>(ntohs(attribute.type));
             auto length = ntohs(attribute.length);
 
-            memcpy(variable, recvline + offset, length);
+            memcpy(variable, recvline.data() + offset, length);
             offset += length;
             variable[length] = 0;
 
@@ -214,7 +270,7 @@ public:
                 std::cout << "\t family: " << addressFamily[addrVariable.family] << std::endl;
 
                 auto port = type == AttributeType::XorMappedAddress ||
-                    type == AttributeType::XorMappedAddress2 ?
+                            type == AttributeType::XorMappedAddress2 ?
                     ntohs(addrVariable.port ^ header.cookie) :
                     ntohs(addrVariable.port);
 
@@ -224,7 +280,7 @@ public:
                 {
                     struct in_addr addr;
                     addr.s_addr = type == AttributeType::XorMappedAddress ||
-                        type == AttributeType::XorMappedAddress2 ?
+                                  type == AttributeType::XorMappedAddress2 ?
                         addrVariable.address[0] ^ header.cookie :
                         addrVariable.address[0];
 
@@ -237,8 +293,12 @@ public:
                         if (type == AttributeType::XorMappedAddress ||
                             type == AttributeType::XorMappedAddress2)
                         {
-                            response.port = port;
-                            response.address = str;
+                            auto response = std::make_unique<StunResponse>();
+
+                            response->port = std::to_string(port);
+                            response->address = str;
+
+                            return response;
                         }
                     }
                 }
@@ -251,6 +311,15 @@ public:
             }
         }
 
-        return response;
+        return std::make_unique<StunResponse>();
     }
+
+private:
+    const char *host;
+    const char *port;
+
+    State state;
+
+    UDP::Socket socket;
+    UDP::Buffer buffer;
 };
