@@ -23,4 +23,3 @@ source_group("network" FILES ${SRC_NETWORK})
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 target_link_libraries(olive LINK_PRIVATE Ws2_32 Iphlpapi)
 endif()
-

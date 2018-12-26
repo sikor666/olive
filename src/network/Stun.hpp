@@ -59,8 +59,8 @@
 //|                      X-Address (Variable)                  ....
 //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-namespace
-{
+//namespace
+//{
 
 enum class AttributeType : u_short
 {
@@ -150,7 +150,7 @@ struct StunAddrVariable
 };
 #pragma pack (pop)
 
-} // namespace
+//} // namespace
 
 class StunResponse final : public IResponse
 {
@@ -185,6 +185,8 @@ public:
             socket.connect(host, port);
             socket.unblock();
 
+            std::cout << "Stun connect " << host << ":" << port << std::endl;
+
             auto request = createRequest();
             socket.send_to(request.data(), request.size());
 
@@ -199,11 +201,23 @@ public:
 
             if (n)
             {
+                std::cout << "Stun 1 endpoint " << endpoint << std::endl;
+
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
                 //socket.disconnect();
 
                 return response;
+            }
+        }
+        else if (state == static_cast<State>(2))
+        {
+            std::string endpoint;
+            n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Stun 2 endpoint " << endpoint << std::endl;
             }
         }
 

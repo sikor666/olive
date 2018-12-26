@@ -2,6 +2,7 @@
 
 #include "Stun.hpp"
 #include "Serv.hpp"
+#include "Oliv.hpp"
 #include "Translator.hpp"
 
 #include <queue>
@@ -16,23 +17,32 @@ public:
         nodes.push_back(std::make_unique<Stun>(StunAddr, StunPort));
     }
 
+    void add(const char *host_, const char *port_)
+    {
+        nodes.push_back(std::make_unique<Oliv>(host_, port_));
+    }
+
     void run()
     {
         if (!nodes.empty())
         {
-            auto node = nodes.front().get();
-            auto response = node->poll();
+            //auto node = nodes.front().get();
 
-            if (response)
+            for (auto& node : nodes)
             {
-                if (response->origin() == Origin::Stun)
+                auto response = node->poll();
+
+                if (response)
                 {
-                    auto stunr = dynamic_cast<StunResponse *>(response.get());
+                    if (response->origin() == Origin::Stun)
+                    {
+                        auto stunr = dynamic_cast<StunResponse *>(response.get());
 
-                    nodes.push_back(std::make_unique<Serv>
-                        (ServAddr, ServPort, stunr->address, stunr->port));
+                        nodes.push_back(std::make_unique<Serv>
+                            (ServAddr, ServPort, stunr->address, stunr->port));
 
-                    //nodes.pop_front();
+                        //nodes.pop_front();
+                    }
                 }
             }
         }

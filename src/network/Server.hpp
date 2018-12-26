@@ -24,7 +24,21 @@ public:
 
             if (n)
             {
-                bool stop = 0;
+                std::cout << "Server endpoint " << endpoint << std::endl;
+
+                auto found = endpoint.find(":");
+                auto addr = endpoint.substr(0, found);
+                auto port = endpoint.substr(found + 1);
+
+                client.add(addr.c_str(), port.c_str());
+
+                Buffer response{ buffer, buffer + n };
+                ServHeader header;
+
+                bufferRead(response, header);
+
+                client.add(header.addr, header.port);
+                //nodes.push_back(std::make_unique<Oliv>(StunAddr, StunPort));
             }
         }
     }

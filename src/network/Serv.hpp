@@ -5,8 +5,9 @@
 #pragma pack (push, 1)
 struct ServHeader
 {
-    char addr[15] = { 0 };
-    char port[5] = { 0 };
+    char type = 0;
+    char addr[16] = { 0 };
+    char port[6] = { 0 };
 };
 #pragma pack (pop)
 
@@ -33,6 +34,8 @@ public:
             socket.connect(host, port);
             socket.unblock();
 
+            std::cout << "Serv connect " << host << ":" << port << std::endl;
+
             auto request = createRequest();
             socket.send_to(request.data(), request.size());
 
@@ -47,11 +50,23 @@ public:
 
             if (n)
             {
+                std::cout << "Serv endpoint " << endpoint << std::endl;
+
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
                 //socket.disconnect();
 
                 return response;
+            }
+        }
+        else if (state == static_cast<State>(2))
+        {
+            std::string endpoint;
+            n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Serv 2 endpoint " << endpoint << std::endl;
             }
         }
 
@@ -63,6 +78,7 @@ private:
     {
         ServHeader header;
 
+        header.type = 1;
         memcpy(header.addr, h.c_str(), h.length());
         //header.addr[h.length()] = 0;
         memcpy(header.port, p.c_str(), p.length());
