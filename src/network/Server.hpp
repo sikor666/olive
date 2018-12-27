@@ -51,7 +51,10 @@ public:
                     bufferInsert(b, body);
                 }
 
-                socket.send_to(b.data(), b.size());
+                std::string endpoint;
+                socket.send_to(b.data(), b.size(), endpoint);
+
+                std::cout << "Server send_to " << endpoint << std::endl;
 
                 //std::string a = header.addr;
                 //std::string p = header.port;

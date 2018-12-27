@@ -48,9 +48,11 @@ public:
         case State::Conn:
         {
             auto request = createRequest();
-            socket.send_to(request.data(), request.size());
+
+            std::string endpoint;
+            socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
-            std::cout << "Serv send_to" << std::endl;
+            std::cout << "Serv send_to " << endpoint << std::endl;
             break;
         }
         case State::Send:
@@ -77,7 +79,7 @@ public:
 
             if (n)
             {
-                std::cout << "Serv State::Recv" << std::endl;
+                std::cout << "Serv State::Recv " << endpoint << std::endl;
             }
 
             break;

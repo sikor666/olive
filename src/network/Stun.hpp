@@ -193,9 +193,11 @@ public:
         case State::Conn:
         {
             auto request = createRequest();
-            socket.send_to(request.data(), request.size());
+
+            std::string endpoint;
+            socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
-            std::cout << "Stun send_to" << std::endl;
+            std::cout << "Stun send_to " << endpoint << std::endl;
             break;
         }
         case State::Send:
@@ -222,9 +224,14 @@ public:
 
             if (n)
             {
-                std::cout << "Stun State::Recv" << std::endl;
+                std::cout << "Stun State::Recv " << endpoint << std::endl;
+
                 std::string response = "ACK";
-                socket.send_to(response.data(), response.size());
+
+                std::string endp;
+                socket.send_to(response.data(), response.size(), endp);
+
+                std::cout << "Stun send_to ACK " << endp << std::endl;
             }
 
             break;

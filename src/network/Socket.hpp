@@ -171,13 +171,18 @@ public:
         return n;
     }
 
-    void send_to(const char *buffer, size_t length)
+    void send_to(const char *buffer, size_t length, std::string& endpoint)
     {
         socklen_t len = sizeof(saddr);
 
         if (sendto(sockfd, buffer, length, 0, (sockaddr *)&saddr, len) != length)
         {
             Throw("sendto error");
+        }
+
+        if ((endpoint = sock_ntop((sockaddr *)&saddr, len)).empty())
+        {
+            Throw("sock_ntop error");
         }
     }
 
