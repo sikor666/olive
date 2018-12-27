@@ -45,8 +45,8 @@ void Throw(Args&&... args)
 //    err << Message;                         \
 //    throw std::runtime_error(err.str());    \
 
-constexpr auto SERV_ADDR = "224.0.0.1";
-constexpr auto SERV_PORT = "9877";
+//constexpr auto SERV_ADDR = "224.0.0.1";
+//constexpr auto SERV_PORT = "9877";
 
 namespace UDP
 {

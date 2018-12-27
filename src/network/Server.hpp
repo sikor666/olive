@@ -24,17 +24,10 @@ public:
 
             if (n)
             {
-                std::string text = "text";
-                socket.send_to(text.c_str(), text.length());
-                socket.send_to(text.c_str(), text.length());
-
                 std::cout << "Server endpoint " << endpoint << std::endl;
 
-                auto found = endpoint.find(":");
-                auto addr = endpoint.substr(0, found);
-                auto port = endpoint.substr(found + 1);
-
-                client.add(addr.c_str(), port.c_str());
+                std::string text = "text";
+                socket.send_to(text.c_str(), text.length());
 
                 Buffer response{ buffer, buffer + n };
                 ServHeader header;
@@ -42,7 +35,12 @@ public:
                 bufferRead(response, header);
 
                 client.add(header.addr, header.port);
-                //nodes.push_back(std::make_unique<Oliv>(StunAddr, StunPort));
+
+                auto found = endpoint.find(":");
+                auto addr = endpoint.substr(0, found);
+                auto port = endpoint.substr(found + 1);
+
+                client.add(addr.c_str(), port.c_str());
             }
         }
     }
