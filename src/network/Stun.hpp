@@ -172,15 +172,67 @@ public:
     Stun(const char *host_, const char *port_) :
         host{ host_ },
         port{ port_ },
-        state{static_cast<State>(0)}
+        state{ State::Unknown }
     {
     }
 
     virtual std::unique_ptr<IResponse> poll() override
     {
-        int n = 0;
+        //int n = 0;
 
-        if (state == static_cast<State>(0))
+        switch (state)
+        {
+        case State::Unknown:
+        {
+            socket.connect(host, port);
+            socket.unblock();
+            state = State::Conn;
+            std::cout << "Stun connect " << host << ":" << port << std::endl;
+            break;
+        }
+        case State::Conn:
+        {
+            auto request = createRequest();
+            socket.send_to(request.data(), request.size());
+            state = State::Send;
+            std::cout << "Stun send_to" << std::endl;
+            break;
+        }
+        case State::Send:
+        {
+            std::string endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Stun recv_from " << endpoint << std::endl;
+
+                auto response = parseResponse({ buffer, buffer + n });
+                state = State::Recv;
+
+                return response;
+            }
+
+            break;
+        }
+        case State::Recv:
+        {
+            std::string endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Stun State::Recv" << std::endl;
+            }
+
+            break;
+        }
+        }
+
+        return {};
+
+
+        /*if (state == static_cast<State>(0))
         {
             socket.connect(host, port);
             socket.unblock();
@@ -217,25 +269,25 @@ public:
                 std::string request = "UDP hole punching";
                 socket.send_to(request.data(), request.size());
 
-                /*std::cout << "Stun 2 endpoint " << endpoint << std::endl;
-                std::cout << "Stun 2 buffer " << std::string(buffer, n) << std::endl;
+                //std::cout << "Stun 2 endpoint " << endpoint << std::endl;
+                //std::cout << "Stun 2 buffer " << std::string(buffer, n) << std::endl;
 
-                auto found = endpoint.find(":");
-                auto addr = endpoint.substr(0, found);
-                auto port = endpoint.substr(found + 1);
+                //auto found = endpoint.find(":");
+                //auto addr = endpoint.substr(0, found);
+                //auto port = endpoint.substr(found + 1);
 
-                std::cout << "Stun 2 oliv " << addr << ":" << port << std::endl;
+                //std::cout << "Stun 2 oliv " << addr << ":" << port << std::endl;
 
-                auto olivr = std::make_unique<OlivResponse>();
-                olivr->name = "stun";
-                olivr->address = addr;
-                olivr->port = port;
+                //auto olivr = std::make_unique<OlivResponse>();
+                //olivr->name = "stun";
+                //olivr->address = addr;
+                //olivr->port = port;
 
-                return olivr;*/
+                //return olivr;
             }
-        }
+        }*/
 
-        return {};
+        //return {};
     }
 
 private:

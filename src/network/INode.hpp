@@ -7,6 +7,7 @@
 enum class State : int
 {
     Unknown = 0,
+    Conn,
     Send,
     Recv,
 };

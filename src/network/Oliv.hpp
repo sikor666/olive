@@ -6,14 +6,6 @@
 #include "Socket.hpp"
 #include "Stun.hpp"
 
-#pragma pack (push, 1)
-struct OlivHeader
-{
-    char type = 1;
-    char name[4] = {'o', 'l', 'i', 'v'};
-};
-#pragma pack (pop)
-
 class OlivResponse final : public IResponse
 {
 public:
@@ -39,7 +31,58 @@ public:
 
     virtual std::unique_ptr<IResponse> poll() override
     {
-        int n = 0;
+        switch (state)
+        {
+        case State::Unknown:
+        {
+            socket.connect(host.c_str(), port.c_str());
+            socket.unblock();
+            state = State::Conn;
+            std::cout << "Oliv connect " << host << ":" << port << std::endl;
+            break;
+        }
+        case State::Conn:
+        {
+            auto request = createRequest();
+            socket.send_to(request.data(), request.size());
+            state = State::Send;
+            std::cout << "Oliv send_to" << std::endl;
+            break;
+        }
+        case State::Send:
+        {
+            std::string endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Oliv recv_from " << endpoint << std::endl;
+
+                auto response = parseResponse({ buffer, buffer + n });
+                state = State::Recv;
+
+                return response;
+            }
+
+            break;
+        }
+        case State::Recv:
+        {
+            std::string endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Oliv State::Recv" << std::endl;
+            }
+
+            break;
+        }
+        }
+
+        return {};
+
+        /*int n = 0;
 
         if (state == static_cast<State>(0))
         {
@@ -79,7 +122,7 @@ public:
             }
         }
 
-        return {};
+        return {};*/
     }
 
 private:

@@ -17,12 +17,12 @@ public:
         nodes.push_back(std::make_unique<Stun>(StunAddr, StunPort));
     }
 
-    void add(const char *host_, const char *port_)
+    /*void add(const char *host_, const char *port_)
     {
         nodes.push_back(std::make_unique<Oliv>(host_, port_));
-    }
+    }*/
 
-    void run(std::string& address, std::string& port)
+    void run()//std::string& address, std::string& port)
     {
         if (!nodes.empty())
         {
@@ -41,10 +41,20 @@ public:
                         nodes.push_back(std::make_unique<Serv>
                             (ServAddr, ServPort, stunr->address, stunr->port));
 
-                        address = stunr->address;
-                        port = stunr->port;
+                        //address = stunr->address;
+                        //port = stunr->port;
                     }
                     else if (response->origin() == Origin::Serv)
+                    {
+                        auto servr = dynamic_cast<ServResponse *>(response.get());
+
+                        for (auto socket : servr->sockets)
+                        {
+                            nodes.push_back(std::make_unique<Oliv>
+                                (socket.address.c_str(), socket.port.c_str()));
+                        }
+                    }
+                    /*else if (response->origin() == Origin::Serv)
                     {
                         auto servr = dynamic_cast<ServResponse *>(response.get());
 
@@ -60,7 +70,7 @@ public:
                             nodes.push_back(std::make_unique<Oliv>
                                 (olivr->address.c_str(), olivr->port.c_str()));
                         }
-                    }
+                    }*/
                 }
             }
         }

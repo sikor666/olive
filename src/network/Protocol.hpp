@@ -38,46 +38,29 @@ using Byte = char;
 using Buffer = std::vector<Byte>;
 
 #pragma pack (push, 1)
-struct Header
+struct ServerHeader
 {
-    int type;
+    char type = 0;
+    char size = 0;
 };
 
-struct Pack
+struct ServerBody
 {
-    int size;
+    char addr[16] = { 0 };
+    char port[6] = { 0 };
 };
 
-struct Info
+struct ServHeader
 {
-    int role;
+    char type = 1;
+    char addr[16] = { 0 };
+    char port[6] = { 0 };
 };
 
-struct PaddlePosition
+struct OlivHeader
 {
-    int index;
-    float position;
-};
-
-struct BallParameters
-{
-    float speed;
-    float dirx;
-    float diry;
-    float left;
-    float top;
-};
-
-struct BlocksParameters
-{
-    int level;
-    float left;
-    float top;
-};
-
-struct Lives
-{
-    int number;
+    char type = 2;
+    char name[4] = { 'o', 'l', 'i', 'v' };
 };
 #pragma pack (pop)
 

@@ -2,20 +2,18 @@
 
 #include "INode.hpp"
 
-#pragma pack (push, 1)
-struct ServHeader
+#include <list>
+
+struct ServAddress
 {
-    char type = 0;
-    char addr[16] = { 0 };
-    char port[6] = { 0 };
+    std::string address;
+    std::string port;
 };
-#pragma pack (pop)
 
 class ServResponse final : public IResponse
 {
 public:
-    std::string port;
-    std::string address;
+    std::list<ServAddress> sockets;
 
     virtual Origin origin() override
     {
@@ -37,7 +35,58 @@ public:
 
     virtual std::unique_ptr<IResponse> poll() override
     {
-        int n = 0;
+        switch (state)
+        {
+        case State::Unknown:
+        {
+            socket.connect(host, port);
+            socket.unblock();
+            state = State::Conn;
+            std::cout << "Serv connect " << host << ":" << port << std::endl;
+            break;
+        }
+        case State::Conn:
+        {
+            auto request = createRequest();
+            socket.send_to(request.data(), request.size());
+            state = State::Send;
+            std::cout << "Serv send_to" << std::endl;
+            break;
+        }
+        case State::Send:
+        {
+            std::string endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Serv recv_from " << endpoint << std::endl;
+
+                auto response = parseResponse({ buffer, buffer + n });
+                state = State::Recv;
+
+                return response;
+            }
+
+            break;
+        }
+        case State::Recv:
+        {
+            std::string endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+
+            if (n)
+            {
+                std::cout << "Serv State::Recv" << std::endl;
+            }
+
+            break;
+        }
+        }
+
+        return {};
+
+        /*int n = 0;
 
         if (state == static_cast<State>(0))
         {
@@ -77,7 +126,7 @@ public:
             }
         }
 
-        return {};
+        return {};*/
     }
 
 private:
@@ -99,7 +148,20 @@ private:
 
     std::unique_ptr<ServResponse> parseResponse(Buffer&& recvline)
     {
-        std::string endpoint{ recvline.data(), recvline.size() };
+        auto response = std::make_unique<ServResponse>();
+
+        ServerHeader header;
+        bufferRead(recvline, header);
+
+        for (size_t i = 0; i < header.size; i++)
+        {
+            ServerBody body;
+            bufferRead(recvline, body);
+            response->sockets.push_back({ body.addr, body.port });
+        }
+
+        return response;
+        /*std::string endpoint{ recvline.data(), recvline.size() };
 
         auto found = endpoint.find(":");
         auto addr = endpoint.substr(0, found);
@@ -110,7 +172,7 @@ private:
         response->port = port;
         response->address = addr;
 
-        return response;
+        return response;*/
     }
 
 private:
