@@ -223,6 +223,8 @@ public:
             if (n)
             {
                 std::cout << "Stun State::Recv" << std::endl;
+                std::string response = "ACK";
+                socket.send_to(response.data(), response.size());
             }
 
             break;
