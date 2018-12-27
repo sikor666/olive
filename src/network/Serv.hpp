@@ -41,8 +41,6 @@ public:
 
         if (state == static_cast<State>(0))
         {
-            //std::cout << "State 0" << std::endl;
-
             socket.connect(host, port);
             socket.unblock();
 
@@ -55,8 +53,6 @@ public:
         }
         else if (state == static_cast<State>(1))
         {
-            //std::cout << "State 1" << std::endl;
-
             std::string endpoint;
             n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 

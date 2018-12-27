@@ -182,8 +182,6 @@ public:
 
         if (state == static_cast<State>(0))
         {
-            //std::cout << "State 0" << std::endl;
-
             socket.connect(host, port);
             socket.unblock();
 
@@ -196,8 +194,6 @@ public:
         }
         else if (state == static_cast<State>(1))
         {
-            //std::cout << "State 1" << std::endl;
-
             std::string endpoint;
             n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 
@@ -218,7 +214,10 @@ public:
 
             if (n)
             {
-                std::cout << "Stun 2 endpoint " << endpoint << std::endl;
+                std::string request = "UDP hole punching";
+                socket.send_to(request.data(), request.size());
+
+                /*std::cout << "Stun 2 endpoint " << endpoint << std::endl;
                 std::cout << "Stun 2 buffer " << std::string(buffer, n) << std::endl;
 
                 auto found = endpoint.find(":");
@@ -232,7 +231,7 @@ public:
                 olivr->address = addr;
                 olivr->port = port;
 
-                return olivr;
+                return olivr;*/
             }
         }
 
