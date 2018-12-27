@@ -87,48 +87,6 @@ public:
         }
 
         return {};
-
-        /*int n = 0;
-
-        if (state == static_cast<State>(0))
-        {
-            socket.connect(host, port);
-            socket.unblock();
-
-            std::cout << "Serv connect " << host << ":" << port << std::endl;
-
-            auto request = createRequest();
-            socket.send_to(request.data(), request.size());
-
-            state = State::Send;
-        }
-        else if (state == static_cast<State>(1))
-        {
-            std::string endpoint;
-            n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                std::cout << "Serv 1 endpoint " << endpoint << std::endl;
-
-                auto response = parseResponse({ buffer, buffer + n });
-                state = State::Recv;
-
-                return response;
-            }
-        }
-        else if (state == static_cast<State>(2))
-        {
-            std::string endpoint;
-            n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                std::cout << "Serv 2 endpoint " << endpoint << std::endl;
-            }
-        }
-
-        return {};*/
     }
 
 private:
@@ -138,9 +96,7 @@ private:
 
         header.type = 1;
         memcpy(header.addr, h.c_str(), h.length());
-        //header.addr[h.length()] = 0;
         memcpy(header.port, p.c_str(), p.length());
-        //header.port[p.length()] = 0;
 
         Buffer buffer;
         bufferInsert(buffer, header);
@@ -163,18 +119,6 @@ private:
         }
 
         return response;
-        /*std::string endpoint{ recvline.data(), recvline.size() };
-
-        auto found = endpoint.find(":");
-        auto addr = endpoint.substr(0, found);
-        auto port = endpoint.substr(found + 1);
-
-        auto response = std::make_unique<ServResponse>();
-
-        response->port = port;
-        response->address = addr;
-
-        return response;*/
     }
 
 private:

@@ -83,48 +83,6 @@ public:
         }
 
         return {};
-
-        /*int n = 0;
-
-        if (state == static_cast<State>(0))
-        {
-            socket.connect(host.c_str(), port.c_str());
-            socket.unblock();
-
-            std::cout << "Oliv connect " << host << ":" << port << std::endl;
-
-            auto request = createRequest();
-            socket.send_to(request.data(), request.size());
-
-            state = State::Send;
-        }
-        else if (state == static_cast<State>(1))
-        {
-            std::string endpoint;
-            n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                std::cout << "Oliv 1 endpoint " << endpoint << std::endl;
-
-                auto response = parseResponse({ buffer, buffer + n });
-                state = State::Recv;
-
-                return response;
-            }
-        }
-        else if (state == static_cast<State>(2))
-        {
-            std::string endpoint;
-            n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                std::cout << "Oliv 2 endpoint " << endpoint << std::endl;
-            }
-        }
-
-        return {};*/
     }
 
 private:

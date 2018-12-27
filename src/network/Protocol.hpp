@@ -5,34 +5,6 @@
 #include <string>
 #include <vector>
 
-enum class PacketType : int
-{
-    Unknown = 0,
-    Connect,
-    Disconnect,
-    SetPaddlePosition,
-    GetPaddlesPositions,
-    SetBallParameters,
-    GetBallParameters,
-    SetBlocksParameters,
-    GetBlocksParameters,
-    SetNumberLives,
-    GetNumberLives,
-};
-
-enum class ClientType : int
-{
-    Unknown = 0,
-    Provider,
-    Receiver,
-};
-
-struct ClientInfo
-{
-    ClientType type = ClientType::Unknown;
-    std::time_t time = 0;
-};
-
 using SocketAddress = std::string;
 using Byte = char;
 using Buffer = std::vector<Byte>;
