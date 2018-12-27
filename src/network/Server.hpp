@@ -47,6 +47,13 @@ public:
                 socket.send_to(response.data(), response.size(), endpoint);
                 std::cout << "Server send_to " << endpoint << std::endl;
             }
+
+            std::cout << "----------------------------------" << std::endl;
+#if defined _WIN32
+            Sleep(1000);
+#else
+            sleep(1);
+#endif
         }
     }
 

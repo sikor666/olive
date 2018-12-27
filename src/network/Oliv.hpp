@@ -61,7 +61,7 @@ public:
                 std::cout << "Oliv recv_from " << endpoint << std::endl;
 
                 auto response = parseResponse({ buffer, buffer + n });
-                state = State::Recv;
+                state = State::Conn;
 
                 return response;
             }
