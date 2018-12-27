@@ -11,6 +11,18 @@ struct ServHeader
 };
 #pragma pack (pop)
 
+class ServResponse final : public IResponse
+{
+public:
+    std::string port;
+    std::string address;
+
+    virtual Origin origin() override
+    {
+        return Origin::Serv;
+    }
+};
+
 class Serv final : public INode
 {
 public:
@@ -54,7 +66,6 @@ public:
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
-                //socket.disconnect();
 
                 return response;
             }
@@ -90,9 +101,20 @@ private:
         return buffer;
     }
 
-    std::unique_ptr<IResponse> parseResponse(Buffer&& recvline)
+    std::unique_ptr<ServResponse> parseResponse(Buffer&& recvline)
     {
-        return {};
+        std::string endpoint{ recvline.data(), recvline.size() };
+
+        auto found = endpoint.find(":");
+        auto addr = endpoint.substr(0, found);
+        auto port = endpoint.substr(found + 1);
+
+        auto response = std::make_unique<ServResponse>();
+
+        response->port = port;
+        response->address = addr;
+
+        return response;
     }
 
 private:

@@ -5,6 +5,8 @@
 #include "Protocol.hpp"
 #include "Socket.hpp"
 
+#include "Oliv.hpp"
+
 #include <iostream>
 #include <map>
 #include <string>
@@ -205,7 +207,6 @@ public:
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
-                //socket.disconnect();
 
                 return response;
             }
@@ -218,6 +219,20 @@ public:
             if (n)
             {
                 std::cout << "Stun 2 endpoint " << endpoint << std::endl;
+                std::cout << "Stun 2 buffer " << std::string(buffer, n) << std::endl;
+
+                auto found = endpoint.find(":");
+                auto addr = endpoint.substr(0, found);
+                auto port = endpoint.substr(found + 1);
+
+                std::cout << "Stun 2 oliv " << addr << ":" << port << std::endl;
+
+                auto olivr = std::make_unique<OlivResponse>();
+                olivr->name = "stun";
+                olivr->address = addr;
+                olivr->port = port;
+
+                return olivr;
             }
         }
 

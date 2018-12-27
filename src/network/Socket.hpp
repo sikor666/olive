@@ -311,6 +311,8 @@ private:
             Throw("errno set from final connect() for ", host, ":", serv);
         }
 
+        memcpy((sockaddr *)&saddr, res->ai_addr, res->ai_addrlen);
+
         freeaddrinfo(ressave);
 
         return sockfd;

@@ -86,7 +86,6 @@ private:
     const char *port;
     std::function<Buffer()> fun;
     std::function<std::unique_ptr<IResponse>(Buffer&&)> call;
-    //State state = State::Waiting;
 
     UDP::Socket socket;
     UDP::Buffer buffer;

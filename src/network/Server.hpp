@@ -15,9 +15,12 @@ public:
 
     void run()
     {
+        std::string address;
+        std::string port;
+
         while (true)
         {
-            client.run();
+            client.run(address, port);
 
             std::string endpoint;
             auto n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
@@ -26,7 +29,7 @@ public:
             {
                 std::cout << "Server endpoint " << endpoint << std::endl;
 
-                std::string text = "text";
+                std::string text = address + ":" + port;
                 socket.send_to(text.c_str(), text.length());
 
                 Buffer response{ buffer, buffer + n };
