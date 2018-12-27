@@ -39,7 +39,7 @@ public:
 
             if (n)
             {
-                std::cout << "Olive endpoint " << endpoint << std::endl;
+                std::cout << "Oliv 1 endpoint " << endpoint << std::endl;
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;

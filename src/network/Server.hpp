@@ -24,6 +24,10 @@ public:
 
             if (n)
             {
+                std::string text = "text";
+                socket.send_to(text.c_str(), text.length());
+                socket.send_to(text.c_str(), text.length());
+
                 std::cout << "Server endpoint " << endpoint << std::endl;
 
                 auto found = endpoint.find(":");

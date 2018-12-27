@@ -50,7 +50,7 @@ public:
 
             if (n)
             {
-                std::cout << "Serv endpoint " << endpoint << std::endl;
+                std::cout << "Serv 1 endpoint " << endpoint << std::endl;
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
