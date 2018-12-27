@@ -192,7 +192,7 @@ public:
         {
             auto request = createRequest();
 
-            std::string endpoint;
+            SocketAddress endpoint;
             socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
             std::cout << "Stun send_to " << endpoint << std::endl;
@@ -200,7 +200,7 @@ public:
         }
         case State::Send:
         {
-            std::string endpoint;
+            SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 
             if (n)
@@ -217,7 +217,7 @@ public:
         }
         case State::Recv:
         {
-            std::string endpoint;
+            SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 
             if (n)
@@ -225,11 +225,8 @@ public:
                 std::cout << "Stun State::Recv " << endpoint << std::endl;
 
                 std::string response = "ACK";
-
-                std::string endp;
-                socket.send_to(response.data(), response.size(), endp);
-
-                std::cout << "Stun send_to ACK " << endp << std::endl;
+                socket.send_to(response.data(), response.size(), endpoint);
+                std::cout << "Stun send_to ACK " << endpoint << std::endl;
             }
 
             break;

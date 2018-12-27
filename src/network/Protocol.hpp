@@ -4,10 +4,12 @@
 #include <ctime>
 #include <string>
 #include <vector>
+#include <list>
 
 using SocketAddress = std::string;
 using Byte = char;
 using Buffer = std::vector<Byte>;
+using Nodes = std::list<std::unique_ptr<INode>>;
 
 #pragma pack (push, 1)
 struct ServerHeader

@@ -49,7 +49,7 @@ public:
         {
             auto request = createRequest();
 
-            std::string endpoint;
+            SocketAddress endpoint;
             socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
             std::cout << "Serv send_to " << endpoint << std::endl;
@@ -57,7 +57,7 @@ public:
         }
         case State::Send:
         {
-            std::string endpoint;
+            SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 
             if (n)
@@ -74,7 +74,7 @@ public:
         }
         case State::Recv:
         {
-            std::string endpoint;
+            SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 
             if (n)

@@ -70,7 +70,7 @@ protected:
 
     Buffer receive()
     {
-        std::string endpoint;
+        SocketAddress endpoint;
         auto n = socket.recv_from(buffer, endpoint);
 
         return Buffer{ buffer, buffer + n };

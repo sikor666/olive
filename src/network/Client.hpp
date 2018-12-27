@@ -3,7 +3,6 @@
 #include "Stun.hpp"
 #include "Serv.hpp"
 #include "Oliv.hpp"
-#include "Translator.hpp"
 
 #include <queue>
 #include <list>
@@ -50,7 +49,5 @@ public:
     }
 
 private:
-    Translator translator;
-
     Nodes nodes;
 };

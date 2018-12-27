@@ -19,34 +19,32 @@ public:
         {
             client.run();
 
-            std::string endpoint;
+            SocketAddress endpoint;
             auto n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 
             if (n)
             {
                 std::cout << "Server endpoint " << endpoint << std::endl;
 
-                Buffer response{ buffer, buffer + n };
+                Buffer request{ buffer, buffer + n };
                 ServHeader header;
-                bufferRead(response, header);
+                bufferRead(request, header);
 
                 stuns.push_back(header);
 
-                Buffer b;
+                Buffer response;
                 ServerHeader h;
                 h.size = stuns.size();
-                bufferInsert(b, h);
+                bufferInsert(response, h);
                 for (auto s : stuns)
                 {
                     ServerBody body;
                     memcpy(body.addr, s.addr, sizeof(s.addr));
                     memcpy(body.port, s.port, sizeof(s.port));
-                    bufferInsert(b, body);
+                    bufferInsert(response, body);
                 }
 
-                std::string endpoint;
-                socket.send_to(b.data(), b.size(), endpoint);
-
+                socket.send_to(response.data(), response.size(), endpoint);
                 std::cout << "Server send_to " << endpoint << std::endl;
             }
         }
