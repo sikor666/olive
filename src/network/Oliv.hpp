@@ -38,7 +38,7 @@ public:
             socket.connect(host.c_str(), port.c_str());
             socket.unblock();
             state = State::Conn;
-            std::cout << "Oliv connect " << host << ":" << port << std::endl;
+            //std::cout << "Oliv connect " << host << ":" << port << std::endl;
             break;
         }
         case State::Conn:
@@ -48,7 +48,8 @@ public:
             SocketAddress endpoint;
             socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
-            std::cout << "Oliv send_to " << endpoint << std::endl;
+            //std::cout << "Oliv send_to " << endpoint << std::endl;
+            stat[endpoint].scounter++;
             break;
         }
         case State::Send:
@@ -58,7 +59,8 @@ public:
 
             if (n)
             {
-                std::cout << "Oliv recv_from " << endpoint << std::endl;
+                //std::cout << "Oliv recv_from " << endpoint << std::endl;
+                stat[endpoint].rcounter++;
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Conn;
@@ -75,7 +77,8 @@ public:
 
             if (n)
             {
-                std::cout << "Oliv State::Recv " << endpoint << std::endl;
+                //std::cout << "Oliv State::Recv " << endpoint << std::endl;
+                stat[endpoint].rcounter++;
             }
 
             break;
@@ -83,6 +86,18 @@ public:
         }
 
         return {};
+    }
+
+    virtual std::string print() override
+    {
+        std::stringstream stream;
+        for (auto s : stat)
+        {
+            stream << "Oliv\t" << s.first << "\t"
+                   << s.second.scounter << "\t"
+                   << s.second.rcounter << "\n";
+        }
+        return stream.str();
     }
 
 private:
@@ -109,4 +124,6 @@ private:
 
     UDP::Socket socket;
     UDP::Buffer buffer;
+
+    Stats stat;
 };

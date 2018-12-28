@@ -42,7 +42,7 @@ public:
             socket.connect(host, port);
             socket.unblock();
             state = State::Conn;
-            std::cout << "Serv connect " << host << ":" << port << std::endl;
+            //std::cout << "Serv connect " << host << ":" << port << std::endl;
             break;
         }
         case State::Conn:
@@ -52,7 +52,7 @@ public:
             SocketAddress endpoint;
             socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
-            std::cout << "Serv send_to " << endpoint << std::endl;
+            //std::cout << "Serv send_to " << endpoint << std::endl;
             break;
         }
         case State::Send:
@@ -62,7 +62,7 @@ public:
 
             if (n)
             {
-                std::cout << "Serv recv_from " << endpoint << std::endl;
+                //std::cout << "Serv recv_from " << endpoint << std::endl;
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
@@ -79,7 +79,7 @@ public:
 
             if (n)
             {
-                std::cout << "Serv State::Recv " << endpoint << std::endl;
+                //std::cout << "Serv State::Recv " << endpoint << std::endl;
             }
 
             break;
@@ -87,6 +87,15 @@ public:
         }
 
         return {};
+    }
+
+    virtual std::string print() override
+    {
+        std::stringstream stream;
+        return stream.str();
+        //stat[NodeAction::Send]
+
+        //stream << stat[NodeAction::]
     }
 
 private:

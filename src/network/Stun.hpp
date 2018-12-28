@@ -185,7 +185,7 @@ public:
             socket.connect(host, port);
             socket.unblock();
             state = State::Conn;
-            std::cout << "Stun connect " << host << ":" << port << std::endl;
+            //std::cout << "Stun connect " << host << ":" << port << std::endl;
             break;
         }
         case State::Conn:
@@ -195,7 +195,8 @@ public:
             SocketAddress endpoint;
             socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
-            std::cout << "Stun send_to " << endpoint << std::endl;
+            //std::cout << "Stun send_to " << endpoint << std::endl;
+            stat[endpoint].scounter++;
             break;
         }
         case State::Send:
@@ -205,7 +206,8 @@ public:
 
             if (n)
             {
-                std::cout << "Stun recv_from " << endpoint << std::endl;
+                //std::cout << "Stun recv_from " << endpoint << std::endl;
+                stat[endpoint].rcounter++;
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
@@ -222,11 +224,13 @@ public:
 
             if (n)
             {
-                std::cout << "Stun State::Recv " << endpoint << std::endl;
+                //std::cout << "Stun State::Recv " << endpoint << std::endl;
+                stat[endpoint].rcounter++;
 
                 std::string response = "ACK";
                 socket.send_to(response.data(), response.size(), endpoint);
-                std::cout << "Stun send_to ACK " << endpoint << std::endl;
+                //std::cout << "Stun send_to ACK " << endpoint << std::endl;
+                stat[endpoint].scounter++;
             }
 
             break;
@@ -234,6 +238,19 @@ public:
         }
 
         return {};
+    }
+
+    virtual std::string print() override
+    {
+        std::stringstream stream;
+        stream << "Public socket: " << publicAddress << "\n";
+        for (auto s : stat)
+        {
+            stream << "Stun\t" << s.first << "\t"
+                << s.second.scounter << "\t"
+                << s.second.rcounter << "\n";
+        }
+        return stream.str();
     }
 
 private:
@@ -292,15 +309,15 @@ private:
                 StunAddrVariable addrVariable;
                 memcpy(&addrVariable, variable, length);
 
-                std::cout << attributeTypes[type] << std::endl;
-                std::cout << "\t family: " << addressFamily[addrVariable.family] << std::endl;
+                //std::cout << attributeTypes[type] << std::endl;
+                //std::cout << "\t family: " << addressFamily[addrVariable.family] << std::endl;
 
                 auto port = type == AttributeType::XorMappedAddress ||
                             type == AttributeType::XorMappedAddress2 ?
                     ntohs(addrVariable.port ^ header.cookie) :
                     ntohs(addrVariable.port);
 
-                std::cout << "\t port: " << port << std::endl;
+                //std::cout << "\t port: " << port << std::endl;
 
                 if (addrVariable.family == IPv4)
                 {
@@ -314,7 +331,7 @@ private:
 
                     if (inet_ntop(AF_INET, &addr, str, sizeof(str)) != nullptr)
                     {
-                        std::cout << "\t address: " << str << std::endl;
+                        //std::cout << "\t address: " << str << std::endl;
 
                         if (type == AttributeType::XorMappedAddress ||
                             type == AttributeType::XorMappedAddress2)
@@ -324,6 +341,8 @@ private:
                             response->port = std::to_string(port);
                             response->address = str;
 
+                            publicAddress = response->address + ":" + response->port;
+
                             return response;
                         }
                     }
@@ -332,7 +351,7 @@ private:
                 break;
             }
             default:
-                std::cout << attributeTypes[type] << ": " << variable << std::endl;
+                //std::cout << attributeTypes[type] << ": " << variable << std::endl;
                 break;
             }
         }
@@ -348,4 +367,7 @@ private:
 
     UDP::Socket socket;
     UDP::Buffer buffer;
+
+    SocketAddress publicAddress;
+    Stats stat;
 };

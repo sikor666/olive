@@ -15,6 +15,12 @@ public:
 
     void run()
     {
+#if defined _WIN32
+        std::system("cls");
+#else
+        std::system("clear");
+#endif
+
         while (true)
         {
             client.run();
@@ -24,7 +30,7 @@ public:
 
             if (n)
             {
-                std::cout << "Server endpoint " << endpoint << std::endl;
+                //std::cout << "Server endpoint " << endpoint << std::endl;
 
                 Buffer request{ buffer, buffer + n };
                 ServHeader header;
@@ -45,14 +51,13 @@ public:
                 }
 
                 socket.send_to(response.data(), response.size(), endpoint);
-                std::cout << "Server send_to " << endpoint << std::endl;
+                //std::cout << "Server send_to " << endpoint << std::endl;
             }
 
-            std::cout << "----------------------------------" << std::endl;
 #if defined _WIN32
-            Sleep(1000);
+            Sleep(300);
 #else
-            sleep(1);
+            usleep(300000);
 #endif
         }
     }

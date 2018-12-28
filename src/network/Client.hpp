@@ -20,8 +20,12 @@ public:
     {
         if (!nodes.empty())
         {
+            std::string view;
+
             for (auto& node : nodes)
             {
+                view += node->print();
+
                 auto response = node->poll();
 
                 if (response)
@@ -45,6 +49,8 @@ public:
                     }
                 }
             }
+
+            std::cout << view << "\033[1;1H";
         }
     }
 

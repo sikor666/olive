@@ -5,11 +5,25 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
+
+enum class NodeAction : int
+{
+    Send,
+    Recv,
+};
+
+struct ActionDetails
+{
+    unsigned long scounter = 0;
+    unsigned long rcounter = 0;
+};
 
 using SocketAddress = std::string;
 using Byte = char;
 using Buffer = std::vector<Byte>;
 using Nodes = std::list<std::unique_ptr<INode>>;
+using Stats = std::map<SocketAddress, ActionDetails>;
 
 #pragma pack (push, 1)
 struct ServerHeader

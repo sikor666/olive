@@ -3,6 +3,7 @@
 #include "IResponse.hpp"
 
 #include <memory>
+#include <string>
 
 enum class State : int
 {
@@ -16,6 +17,7 @@ class INode
 {
 public:
     virtual std::unique_ptr<IResponse> poll() = 0;
+    virtual std::string print() = 0;
 
     virtual ~INode() = default;
 };
