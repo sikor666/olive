@@ -50,7 +50,16 @@ public:
                 }
             }
 
+            static size_t vievSize = 0;
+
+            if (vievSize != view.size())
+            {
+                std::cout << "\033[2J";
+            }
+
             std::cout << view << "\033[1;1H";
+
+            vievSize = view.size();
         }
     }
 

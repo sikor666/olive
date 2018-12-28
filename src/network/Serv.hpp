@@ -53,6 +53,7 @@ public:
             socket.send_to(request.data(), request.size(), endpoint);
             state = State::Send;
             //std::cout << "Serv send_to " << endpoint << std::endl;
+            stat[endpoint].scounter++;
             break;
         }
         case State::Send:
@@ -63,6 +64,7 @@ public:
             if (n)
             {
                 //std::cout << "Serv recv_from " << endpoint << std::endl;
+                stat[endpoint].rcounter++;
 
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
@@ -80,6 +82,7 @@ public:
             if (n)
             {
                 //std::cout << "Serv State::Recv " << endpoint << std::endl;
+                stat[endpoint].rcounter++;
             }
 
             break;
@@ -92,10 +95,13 @@ public:
     virtual std::string print() override
     {
         std::stringstream stream;
+        for (auto s : stat)
+        {
+            stream << "Serv\t" << s.first << "\t"
+                << s.second.scounter << "\t"
+                << s.second.rcounter << "\n";
+        }
         return stream.str();
-        //stat[NodeAction::Send]
-
-        //stream << stat[NodeAction::]
     }
 
 private:
@@ -141,4 +147,6 @@ private:
 
     UDP::Socket socket;
     UDP::Buffer buffer;
+
+    Stats stat;
 };
