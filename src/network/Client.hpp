@@ -20,11 +20,14 @@ public:
     {
         if (!nodes.empty())
         {
-            std::string view;
+            std::stringstream stream;
+            stream << "\n\n";
+            stream << "Public socket : " << PublicSocket << "\n";
+            stream << "Host name     : " << HostName << "\n\n";
 
             for (auto& node : nodes)
             {
-                view += node->print();
+                stream << node->print();
 
                 auto response = node->poll();
 
@@ -44,22 +47,22 @@ public:
                         for (auto socket : servr->sockets)
                         {
                             nodes.push_back(std::make_unique<Oliv>
-                                (socket.address.c_str(), socket.port.c_str()));
+                                (socket.name, socket.address, socket.port));
                         }
                     }
                 }
             }
 
-            static size_t vievSize = 0;
+            static size_t streamSize = 0;
 
-            if (vievSize != view.size())
+            if (streamSize != stream.str().size())
             {
                 std::cout << "\033[2J";
             }
 
-            std::cout << view << "\033[1;1H";
+            std::cout << stream.str() << "\033[1;1H";
 
-            vievSize = view.size();
+            streamSize = stream.str().size();
         }
     }
 

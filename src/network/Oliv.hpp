@@ -22,7 +22,8 @@ public:
 class Oliv final : public INode
 {
 public:
-    Oliv(const char *host_, const char *port_) :
+    Oliv(std::string name_, std::string host_, std::string port_) :
+        name{ name_ },
         host{ host_ },
         port{ port_ },
         state{ static_cast<State>(0) }
@@ -50,6 +51,7 @@ public:
             state = State::Send;
             //std::cout << "Oliv send_to " << endpoint << std::endl;
             stat[endpoint].scounter++;
+            stat[endpoint].name = name;
             break;
         }
         case State::Send:
@@ -59,6 +61,15 @@ public:
 
             if (n)
             {
+                OlivHeader header;
+                Buffer request{ buffer, buffer + n };
+                bufferRead(request, header);
+
+                if (name != header.name)
+                {
+                    Throw("Host name error");
+                }
+
                 //std::cout << "Oliv recv_from " << endpoint << std::endl;
                 stat[endpoint].rcounter++;
 
@@ -93,7 +104,8 @@ public:
         std::stringstream stream;
         for (auto s : stat)
         {
-            stream << "Oliv\t" << s.first << "\t"
+            stream << "Oliv\t" << s.second.name << "\t"
+                   << s.first << "\t"
                    << s.second.scounter << "\t"
                    << s.second.rcounter << "\n";
         }
@@ -104,6 +116,7 @@ private:
     Buffer createRequest()
     {
         OlivHeader header;
+        memcpy(header.name, HostName.c_str(), HostName.size());
 
         Buffer buffer;
         bufferInsert(buffer, header);
@@ -117,6 +130,7 @@ private:
     }
 
 private:
+    std::string name;
     std::string host;
     std::string port;
 

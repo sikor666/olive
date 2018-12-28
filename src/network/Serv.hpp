@@ -6,6 +6,7 @@
 
 struct ServAddress
 {
+    std::string name;
     std::string address;
     std::string port;
 };
@@ -13,6 +14,7 @@ struct ServAddress
 class ServResponse final : public IResponse
 {
 public:
+    std::string name;
     std::list<ServAddress> sockets;
 
     virtual Origin origin() override
@@ -69,6 +71,8 @@ public:
                 auto response = parseResponse({ buffer, buffer + n });
                 state = State::Recv;
 
+                stat[endpoint].name = response->name;
+
                 return response;
             }
 
@@ -76,14 +80,14 @@ public:
         }
         case State::Recv:
         {
-            SocketAddress endpoint;
+            /*SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
 
             if (n)
             {
                 //std::cout << "Serv State::Recv " << endpoint << std::endl;
                 stat[endpoint].rcounter++;
-            }
+            }*/
 
             break;
         }
@@ -97,7 +101,8 @@ public:
         std::stringstream stream;
         for (auto s : stat)
         {
-            stream << "Serv\t" << s.first << "\t"
+            stream << "Serv\t" << s.second.name << "\t"
+                << s.first << "\t"
                 << s.second.scounter << "\t"
                 << s.second.rcounter << "\n";
         }
@@ -110,6 +115,7 @@ private:
         ServHeader header;
 
         header.type = 1;
+        memcpy(header.name, HostName.c_str(), sizeof(header.name));
         memcpy(header.addr, h.c_str(), h.length());
         memcpy(header.port, p.c_str(), p.length());
 
@@ -126,11 +132,13 @@ private:
         ServerHeader header;
         bufferRead(recvline, header);
 
+        response->name = header.name;
+
         for (size_t i = 0; i < header.size; i++)
         {
             ServerBody body;
             bufferRead(recvline, body);
-            response->sockets.push_back({ body.addr, body.port });
+            response->sockets.push_back({ body.name, body.addr, body.port });
         }
 
         return response;

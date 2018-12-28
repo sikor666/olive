@@ -41,10 +41,12 @@ public:
                 Buffer response;
                 ServerHeader h;
                 h.size = stuns.size();
+                memcpy(h.name, HostName.c_str(), HostName.size());
                 bufferInsert(response, h);
                 for (auto s : stuns)
                 {
                     ServerBody body;
+                    memcpy(body.name, s.name, sizeof(s.name));
                     memcpy(body.addr, s.addr, sizeof(s.addr));
                     memcpy(body.port, s.port, sizeof(s.port));
                     bufferInsert(response, body);
@@ -55,9 +57,9 @@ public:
             }
 
 #if defined _WIN32
-            Sleep(300);
+            Sleep(100);
 #else
-            usleep(300000);
+            usleep(100000);
 #endif
         }
     }

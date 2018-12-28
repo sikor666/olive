@@ -15,11 +15,11 @@ enum class NodeAction : int
 
 struct ActionDetails
 {
+    std::string name = "        ";
     unsigned long scounter = 0;
     unsigned long rcounter = 0;
 };
 
-using SocketAddress = std::string;
 using Byte = char;
 using Buffer = std::vector<Byte>;
 using Nodes = std::list<std::unique_ptr<INode>>;
@@ -30,10 +30,12 @@ struct ServerHeader
 {
     char type = 0;
     char size = 0;
+    char name[9] = { 0 };
 };
 
 struct ServerBody
 {
+    char name[9] = { 0 };
     char addr[16] = { 0 };
     char port[6] = { 0 };
 };
@@ -41,6 +43,7 @@ struct ServerBody
 struct ServHeader
 {
     char type = 1;
+    char name[9] = { 0 };
     char addr[16] = { 0 };
     char port[6] = { 0 };
 };
@@ -48,7 +51,7 @@ struct ServHeader
 struct OlivHeader
 {
     char type = 2;
-    char name[4] = { 'o', 'l', 'i', 'v' };
+    char name[9] = { 0 };
 };
 #pragma pack (pop)
 

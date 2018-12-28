@@ -157,6 +157,7 @@ struct StunAddrVariable
 class StunResponse final : public IResponse
 {
 public:
+    std::string name;
     std::string port;
     std::string address;
 
@@ -224,10 +225,19 @@ public:
 
             if (n)
             {
+                OlivHeader header;
+                Buffer request{ buffer, buffer + n };
+                bufferRead(request, header);
+
+                stat[endpoint].name = header.name;
+
                 //std::cout << "Stun State::Recv " << endpoint << std::endl;
                 stat[endpoint].rcounter++;
 
-                std::string response = "ACK";
+                //std::string response = "ACK";
+                memcpy(header.name, HostName.c_str(), HostName.size());
+                Buffer response;
+                bufferInsert(response, header);
                 socket.send_to(response.data(), response.size(), endpoint);
                 //std::cout << "Stun send_to ACK " << endpoint << std::endl;
                 stat[endpoint].scounter++;
@@ -243,10 +253,10 @@ public:
     virtual std::string print() override
     {
         std::stringstream stream;
-        stream << "Public socket: " << publicAddress << "\n";
         for (auto s : stat)
         {
-            stream << "Stun\t" << s.first << "\t"
+            stream << "Stun\t" << s.second.name << "\t"
+                << s.first << "\t"
                 << s.second.scounter << "\t"
                 << s.second.rcounter << "\n";
         }
@@ -341,7 +351,7 @@ private:
                             response->port = std::to_string(port);
                             response->address = str;
 
-                            publicAddress = response->address + ":" + response->port;
+                            PublicSocket = response->address + ":" + response->port;
 
                             return response;
                         }
@@ -368,6 +378,5 @@ private:
     UDP::Socket socket;
     UDP::Buffer buffer;
 
-    SocketAddress publicAddress;
     Stats stat;
 };
