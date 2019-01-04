@@ -1,6 +1,6 @@
 #pragma once
 
-#include "INode.hpp"
+#include "Node.hpp"
 
 #include "Protocol.hpp"
 #include "Socket.hpp"

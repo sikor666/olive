@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IResponse.hpp"
+#include "Strategy.hpp"
 
 #include <memory>
 #include <string>
