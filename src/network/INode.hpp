@@ -5,14 +5,6 @@
 #include <memory>
 #include <string>
 
-enum class State : int
-{
-    Unknown = 0,
-    Conn,
-    Send,
-    Recv,
-};
-
 class INode
 {
 public:

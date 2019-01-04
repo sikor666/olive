@@ -37,6 +37,7 @@ public:
                 bufferRead(request, header);
 
                 stuns.push_back(header);
+                client.add(header.name, header.addr, header.port);
 
                 Buffer response;
                 ServerHeader h;

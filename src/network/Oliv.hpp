@@ -5,6 +5,7 @@
 #include "Protocol.hpp"
 #include "Socket.hpp"
 #include "Stun.hpp"
+#include "State.hpp"
 
 class OlivResponse final : public IResponse
 {
@@ -25,78 +26,49 @@ public:
     Oliv(std::string name_, std::string host_, std::string port_) :
         name{ name_ },
         host{ host_ },
-        port{ port_ },
-        state{ static_cast<State>(0) }
+        port{ port_ }
     {
-    }
+        state.addTrigger(Trigger::CloseConnection, [&]() {
+            socket.disconnect();
+            return std::make_unique<OlivResponse>();
+        });
 
-    virtual std::unique_ptr<IResponse> poll() override
-    {
-        switch (state)
-        {
-        case State::Unknown:
-        {
+        state.addTrigger(Trigger::ConnectHost, [&]() {
             socket.connect(host.c_str(), port.c_str());
             socket.unblock();
-            state = State::Conn;
-            //std::cout << "Oliv connect " << host << ":" << port << std::endl;
-            break;
-        }
-        case State::Conn:
-        {
-            auto request = createRequest();
+            return std::make_unique<OlivResponse>();
+        });
 
+        state.addTrigger(Trigger::SendBuffer, [&]() {
+            auto request = createRequest();
             SocketAddress endpoint;
             socket.send_to(request.data(), request.size(), endpoint);
-            state = State::Send;
-            //std::cout << "Oliv send_to " << endpoint << std::endl;
             stat[endpoint].scounter++;
             stat[endpoint].name = name;
-            break;
-        }
-        case State::Send:
-        {
+            return std::make_unique<OlivResponse>();
+        });
+
+        state.addTrigger(Trigger::ReceiveBuffer, [&]() {
             SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
             if (n)
             {
                 OlivHeader header;
-                Buffer request{ buffer, buffer + n };
-                bufferRead(request, header);
-
+                Buffer response{ buffer, buffer + n };
+                bufferRead(response, header);
                 if (name != header.name)
                 {
                     Throw("Host name error");
                 }
-
-                //std::cout << "Oliv recv_from " << endpoint << std::endl;
-                stat[endpoint].rcounter++;
-
-                auto response = parseResponse({ buffer, buffer + n });
-                state = State::Conn;
-
-                return response;
-            }
-
-            break;
-        }
-        case State::Recv:
-        {
-            SocketAddress endpoint;
-            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                //std::cout << "Oliv State::Recv " << endpoint << std::endl;
                 stat[endpoint].rcounter++;
             }
+            return std::make_unique<OlivResponse>();
+        });
+    }
 
-            break;
-        }
-        }
-
-        return {};
+    virtual std::unique_ptr<IResponse> poll() override
+    {
+        return state.changeState();
     }
 
     virtual std::string print() override
@@ -134,7 +106,7 @@ private:
     std::string host;
     std::string port;
 
-    State state;
+    StateMachine state;
 
     UDP::Socket socket;
     UDP::Buffer buffer;

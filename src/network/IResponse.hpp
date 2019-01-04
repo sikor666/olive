@@ -5,6 +5,7 @@ enum class Origin
     Stun,
     Serv,
     Oliv,
+    Erro
 };
 
 class IResponse

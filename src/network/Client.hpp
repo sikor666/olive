@@ -16,6 +16,11 @@ public:
         nodes.push_back(std::make_unique<Stun>(StunAddr, StunPort));
     }
 
+    void add(std::string name, std::string host, std::string port)
+    {
+        //nodes.push_back(std::make_unique<Oliv>(name, host, port));
+    }
+
     void run()
     {
         if (!nodes.empty())

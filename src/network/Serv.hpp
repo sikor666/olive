@@ -31,7 +31,7 @@ public:
         port{ port_ },
         h{ h_ },
         p{ p_ },
-        state{ static_cast<State>(0) }
+        state{ State::Close }
     {
     }
 
@@ -39,15 +39,15 @@ public:
     {
         switch (state)
         {
-        case State::Unknown:
+        case State::Close:
         {
             socket.connect(host, port);
             socket.unblock();
-            state = State::Conn;
+            state = State::Connect;
             //std::cout << "Serv connect " << host << ":" << port << std::endl;
             break;
         }
-        case State::Conn:
+        case State::Connect:
         {
             auto request = createRequest();
 
@@ -69,7 +69,7 @@ public:
                 stat[endpoint].rcounter++;
 
                 auto response = parseResponse({ buffer, buffer + n });
-                state = State::Recv;
+                state = State::Receive;
 
                 stat[endpoint].name = response->name;
 
@@ -78,7 +78,7 @@ public:
 
             break;
         }
-        case State::Recv:
+        case State::Receive:
         {
             /*SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;

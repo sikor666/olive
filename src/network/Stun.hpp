@@ -173,7 +173,7 @@ public:
     Stun(const char *host_, const char *port_) :
         host{ host_ },
         port{ port_ },
-        state{ State::Unknown }
+        state{ State::Close }
     {
     }
 
@@ -181,15 +181,15 @@ public:
     {
         switch (state)
         {
-        case State::Unknown:
+        case State::Close:
         {
             socket.connect(host, port);
             socket.unblock();
-            state = State::Conn;
+            state = State::Connect;
             //std::cout << "Stun connect " << host << ":" << port << std::endl;
             break;
         }
-        case State::Conn:
+        case State::Connect:
         {
             auto request = createRequest();
 
@@ -211,14 +211,14 @@ public:
                 stat[endpoint].rcounter++;
 
                 auto response = parseResponse({ buffer, buffer + n });
-                state = State::Recv;
+                state = State::Receive;
 
                 return response;
             }
 
             break;
         }
-        case State::Recv:
+        case State::Receive:
         {
             SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
