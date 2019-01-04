@@ -7,17 +7,34 @@
 #include "Stun.hpp"
 #include "State.hpp"
 
-class OlivResponse final : public IResponse
+class OlivStrategy final : public IStrategy
 {
 public:
+    OlivStrategy(Strategy strategy_) : strategy{ strategy_ }
+    {
+    }
+
+    virtual Strategy policy() override
+    {
+        return strategy;
+    }
+
+    virtual void connect(Nodes& nodes) override
+    {
+
+    }
+
+private:
+    Strategy strategy;
+
     std::string name;
     std::string port;
     std::string address;
 
-    virtual Origin origin() override
+    /*virtual Origin origin() override
     {
         return Origin::Oliv;
-    }
+    }*/
 };
 
 class Oliv final : public INode
@@ -30,13 +47,13 @@ public:
     {
         state.addTrigger(Trigger::CloseConnection, [&]() {
             socket.disconnect();
-            return std::make_unique<OlivResponse>();
+            return std::make_unique<OlivStrategy>(Strategy::Continue);
         });
 
         state.addTrigger(Trigger::ConnectHost, [&]() {
             socket.connect(host.c_str(), port.c_str());
             socket.unblock();
-            return std::make_unique<OlivResponse>();
+            return std::make_unique<OlivStrategy>(Strategy::Continue);
         });
 
         state.addTrigger(Trigger::SendBuffer, [&]() {
@@ -45,7 +62,7 @@ public:
             socket.send_to(request.data(), request.size(), endpoint);
             stat[endpoint].scounter++;
             stat[endpoint].name = name;
-            return std::make_unique<OlivResponse>();
+            return std::make_unique<OlivStrategy>(Strategy::Continue);
         });
 
         state.addTrigger(Trigger::ReceiveBuffer, [&]() {
@@ -61,12 +78,13 @@ public:
                     Throw("Host name error");
                 }
                 stat[endpoint].rcounter++;
+                return parseResponse(std::move(response));
             }
-            return std::make_unique<OlivResponse>();
+            return std::make_unique<OlivStrategy>(Strategy::Continue);
         });
     }
 
-    virtual std::unique_ptr<IResponse> poll() override
+    virtual std::unique_ptr<IStrategy> poll() override
     {
         return state.changeState();
     }
@@ -96,9 +114,9 @@ private:
         return buffer;
     }
 
-    std::unique_ptr<OlivResponse> parseResponse(Buffer&& recvline)
+    std::unique_ptr<OlivStrategy> parseResponse(Buffer&& recvline)
     {
-        return std::make_unique<OlivResponse>();
+        return std::make_unique<OlivStrategy>(Strategy::Continue);
     }
 
 private:

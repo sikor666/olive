@@ -11,16 +11,39 @@ struct ServAddress
     std::string port;
 };
 
-class ServResponse final : public IResponse
+class ServStrategy final : public IStrategy
 {
 public:
+    ServStrategy(Strategy strategy_) : strategy{ strategy_ }
+    {
+    }
+
+    virtual Strategy policy() override
+    {
+        return strategy;
+    }
+
+    virtual void connect(Nodes& nodes) override
+    {
+        //auto servr = dynamic_cast<ServResponse *>(response.get());
+
+        for (auto socket : sockets)
+        {
+            nodes.push_back(std::make_unique<Oliv>
+                (socket.name, socket.address, socket.port));
+        }
+    }
+
     std::string name;
     std::list<ServAddress> sockets;
 
-    virtual Origin origin() override
+private:
+    Strategy strategy;
+
+    /*virtual Origin origin() override
     {
         return Origin::Serv;
-    }
+    }*/
 };
 
 class Serv final : public INode
@@ -30,14 +53,52 @@ public:
         host{ host_ },
         port{ port_ },
         h{ h_ },
-        p{ p_ },
-        state{ State::Close }
+        p{ p_ }
     {
+        state.addTrigger(Trigger::CloseConnection, [&]() {
+            socket.disconnect();
+            return std::make_unique<ServStrategy>(Strategy::Continue);
+        });
+
+        state.addTrigger(Trigger::ConnectHost, [&]() {
+            socket.connect(host, port);
+            socket.unblock();
+            return std::make_unique<ServStrategy>(Strategy::Continue);
+        });
+
+        state.addTrigger(Trigger::SendBuffer, [&]() {
+            auto request = createRequest();
+            SocketAddress endpoint;
+            socket.send_to(request.data(), request.size(), endpoint);
+            stat[endpoint].scounter++;
+            return std::make_unique<ServStrategy>(Strategy::Continue);
+        });
+
+        state.addTrigger(Trigger::ReceiveBuffer, [&]() {
+            SocketAddress endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+            if (n)
+            {
+                stat[endpoint].rcounter++;
+                auto response = parseResponse({ buffer, buffer + n });
+                stat[endpoint].name = response->name;
+                return response;
+            }
+            return std::make_unique<ServStrategy>(Strategy::Repeat);
+        });
+
+        state.addTrigger(Trigger::StopTransmission, [&]() {
+            //socket.disconnect();
+            return std::make_unique<ServStrategy>(Strategy::Continue);
+        });
+
     }
 
-    virtual std::unique_ptr<IResponse> poll() override
+    virtual std::unique_ptr<IStrategy> poll() override
     {
-        switch (state)
+        return state.changeState();;
+
+        /*switch (state)
         {
         case State::Close:
         {
@@ -80,20 +141,18 @@ public:
         }
         case State::Receive:
         {
-            /*SocketAddress endpoint;
-            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                //std::cout << "Serv State::Recv " << endpoint << std::endl;
-                stat[endpoint].rcounter++;
-            }*/
-
+            //SocketAddress endpoint;
+            //int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+            //if (n)
+            //{
+            //    //std::cout << "Serv State::Recv " << endpoint << std::endl;
+            //    stat[endpoint].rcounter++;
+            //}
             break;
         }
         }
 
-        return {};
+        return {};*/
     }
 
     virtual std::string print() override
@@ -125,9 +184,9 @@ private:
         return buffer;
     }
 
-    std::unique_ptr<ServResponse> parseResponse(Buffer&& recvline)
+    std::unique_ptr<ServStrategy> parseResponse(Buffer&& recvline)
     {
-        auto response = std::make_unique<ServResponse>();
+        auto response = std::make_unique<ServStrategy>(Strategy::Disconnect);
 
         ServerHeader header;
         bufferRead(recvline, header);
@@ -151,7 +210,7 @@ private:
     std::string h;
     std::string p;
 
-    State state;
+    StateMachine state;
 
     UDP::Socket socket;
     UDP::Buffer buffer;

@@ -34,7 +34,11 @@ public:
             {
                 stream << node->print();
 
-                auto response = node->poll();
+                auto strategy = node->poll();
+
+                strategy->connect(nodes);
+
+                /*auto response = node->poll();
 
                 if (response)
                 {
@@ -55,7 +59,7 @@ public:
                                 (socket.name, socket.address, socket.port));
                         }
                     }
-                }
+                }*/
             }
 
             static size_t streamSize = 0;

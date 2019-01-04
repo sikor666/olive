@@ -1,17 +1,28 @@
 #pragma once
 
-enum class Origin
+#include "Protocol.hpp"
+
+/*enum class Origin : int
 {
     Stun,
     Serv,
     Oliv,
-    Erro
+};*/
+
+enum class Strategy : int
+{
+    Continue = 0,
+    Repeat = 1,
+    Reconnect = 2,
+    Disconnect = 3,
 };
 
-class IResponse
+class IStrategy
 {
 public:
-    virtual Origin origin() = 0;
+    //virtual Origin origin() = 0;
+    virtual Strategy policy() = 0;
+    virtual void connect(Nodes& nodes) = 0;
 
-    virtual ~IResponse() = default;
+    virtual ~IStrategy() = default;
 };

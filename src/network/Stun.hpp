@@ -6,6 +6,7 @@
 #include "Socket.hpp"
 
 #include "Oliv.hpp"
+#include "Serv.hpp"
 
 #include <iostream>
 #include <map>
@@ -154,17 +155,33 @@ struct StunAddrVariable
 
 } // namespace
 
-class StunResponse final : public IResponse
+class StunStrategy final : public IStrategy
 {
 public:
+    virtual Strategy policy() override
+    {
+        return Strategy::Continue;
+    }
+
+    virtual void connect(Nodes& nodes) override
+    {
+        //auto stunr = dynamic_cast<StunResponse *>(response.get());
+
+        if (!address.empty() && !port.empty())
+        {
+            nodes.push_back(std::make_unique<Serv>
+                (ServAddr, ServPort, address, port));
+        }
+    }
+
     std::string name;
     std::string port;
     std::string address;
 
-    virtual Origin origin() override
+    /*virtual Origin origin() override
     {
         return Origin::Stun;
-    }
+    }*/
 };
 
 class Stun final : public INode
@@ -173,34 +190,34 @@ public:
     Stun(const char *host_, const char *port_) :
         host{ host_ },
         port{ port_ },
-        state{ State::Close }
+        state{ State::Connect }
     {
     }
 
-    virtual std::unique_ptr<IResponse> poll() override
+    virtual std::unique_ptr<IStrategy> poll() override
     {
         switch (state)
         {
-        case State::Close:
+        case State::Connect:
         {
             socket.connect(host, port);
             socket.unblock();
-            state = State::Connect;
+            state = State::Send;
             //std::cout << "Stun connect " << host << ":" << port << std::endl;
             break;
         }
-        case State::Connect:
+        case State::Send:
         {
             auto request = createRequest();
 
             SocketAddress endpoint;
             socket.send_to(request.data(), request.size(), endpoint);
-            state = State::Send;
+            state = State::Receive;
             //std::cout << "Stun send_to " << endpoint << std::endl;
             stat[endpoint].scounter++;
             break;
         }
-        case State::Send:
+        case State::Receive:
         {
             SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
@@ -211,14 +228,14 @@ public:
                 stat[endpoint].rcounter++;
 
                 auto response = parseResponse({ buffer, buffer + n });
-                state = State::Receive;
+                state = State::Idle;
 
                 return response;
             }
 
             break;
         }
-        case State::Receive:
+        case State::Idle:
         {
             SocketAddress endpoint;
             int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
@@ -247,7 +264,7 @@ public:
         }
         }
 
-        return {};
+        return std::make_unique<StunStrategy>();
     }
 
     virtual std::string print() override
@@ -285,7 +302,7 @@ private:
         return buffer;
     }
 
-    std::unique_ptr<StunResponse> parseResponse(Buffer&& recvline)
+    std::unique_ptr<StunStrategy> parseResponse(Buffer&& recvline)
     {
         StunHeader header;
 
@@ -346,7 +363,7 @@ private:
                         if (type == AttributeType::XorMappedAddress ||
                             type == AttributeType::XorMappedAddress2)
                         {
-                            auto response = std::make_unique<StunResponse>();
+                            auto response = std::make_unique<StunStrategy>();
 
                             response->port = std::to_string(port);
                             response->address = str;
@@ -366,7 +383,7 @@ private:
             }
         }
 
-        return std::make_unique<StunResponse>();
+        return std::make_unique<StunStrategy>();
     }
 
 private:

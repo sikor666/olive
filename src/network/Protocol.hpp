@@ -6,6 +6,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <memory>
 
 enum class NodeAction : int
 {
@@ -22,7 +23,7 @@ struct ActionDetails
 
 using Byte = char;
 using Buffer = std::vector<Byte>;
-using Nodes = std::list<std::unique_ptr<INode>>;
+using Nodes = std::list<std::unique_ptr<class INode>>;
 using Stats = std::map<SocketAddress, ActionDetails>;
 
 #pragma pack (push, 1)
