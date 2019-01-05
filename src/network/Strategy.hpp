@@ -4,7 +4,7 @@ enum class Strategy : int
 {
     Continue,
     Repeat,
-    //Reconnect,
+    Reconnect,
     Disconnect,
     Listen,
 };

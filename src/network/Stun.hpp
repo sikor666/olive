@@ -344,7 +344,7 @@ private:
             }
         }
 
-        return std::make_unique<StunStrategy>(Strategy::Disconnect);
+        return std::make_unique<StunStrategy>(Strategy::Reconnect);
     }
 
 private:
