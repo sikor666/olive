@@ -4,11 +4,11 @@
 
 enum class Strategy : int
 {
-    Continue = 0,
-    Repeat = 1,
-    Reconnect = 2,
-    Disconnect = 3,
-    Listen = 4,
+    Continue,
+    Repeat,
+    //Reconnect,
+    Disconnect,
+    Listen,
 };
 
 class IStrategy

@@ -6,11 +6,11 @@
 
 enum class State : int
 {
+    //Reconnect,
     Connect,
-    Reconnect,
-    Disconnect,
     Send,
     Receive,
+    Disconnect,
     Idle,
 };
 
@@ -32,9 +32,9 @@ public:
             {Strategy::Continue, {Trigger::ConnectHost, State::Send}},
         };
 
-        rules[State::Reconnect] = {
+        /*rules[State::Reconnect] = {
             {Strategy::Continue ,{Trigger::CloseConnection, State::Connect}},
-        };
+        };*/
 
         rules[State::Disconnect] = {
             {Strategy::Continue, {Trigger::CloseConnection, State::Idle}},
@@ -47,7 +47,7 @@ public:
         rules[State::Receive] = {
             {Strategy::Continue, {Trigger::ReceiveBuffer, State::Send}},
             {Strategy::Repeat, {Trigger::ReceiveBuffer, State::Receive}},
-            {Strategy::Reconnect, {Trigger::CloseConnection, State::Connect}},
+            //{Strategy::Reconnect, {Trigger::CloseConnection, State::Connect}},
             {Strategy::Disconnect, {Trigger::CloseConnection, State::Disconnect}},
             {Strategy::Listen, {Trigger::IdleTransmission, State::Idle}},
         };
