@@ -2,6 +2,8 @@
 
 #include "Node.hpp"
 
+#include "Oliv.hpp"
+
 #include <list>
 
 struct ServAddress
@@ -55,11 +57,6 @@ public:
         h{ h_ },
         p{ p_ }
     {
-        state.addTrigger(Trigger::CloseConnection, [&]() {
-            socket.disconnect();
-            return std::make_unique<ServStrategy>(Strategy::Continue);
-        });
-
         state.addTrigger(Trigger::ConnectHost, [&]() {
             socket.connect(host, port);
             socket.unblock();
@@ -87,11 +84,14 @@ public:
             return std::make_unique<ServStrategy>(Strategy::Repeat);
         });
 
-        state.addTrigger(Trigger::StopTransmission, [&]() {
-            //socket.disconnect();
+        state.addTrigger(Trigger::CloseConnection, [&]() {
+            socket.disconnect();
             return std::make_unique<ServStrategy>(Strategy::Continue);
         });
 
+        state.addTrigger(Trigger::IdleTransmission, [&]() {
+            return std::make_unique<ServStrategy>(Strategy::Continue);
+        });
     }
 
     virtual std::unique_ptr<IStrategy> poll() override

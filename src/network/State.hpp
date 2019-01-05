@@ -17,11 +17,11 @@ enum class State : int
 
 enum class Trigger : int
 {
-    CloseConnection,
     ConnectHost,
     SendBuffer,
     ReceiveBuffer,
-    StopTransmission,
+    CloseConnection,
+    IdleTransmission,
 };
 
 class StateMachine
@@ -58,6 +58,7 @@ public:
             {Strategy::Repeat, {Trigger::ReceiveBuffer, State::Receive}},
             {Strategy::Reconnect, {Trigger::CloseConnection, State::Connect}},
             {Strategy::Disconnect, {Trigger::CloseConnection, State::Disconnect}},
+            {Strategy::Listen, {Trigger::IdleTransmission, State::Idle}},
             //{Strategy::Continue, {Trigger::SendBuffer, State::Send}},
             //{Strategy::Reconnect, {Trigger::CloseConnection, State::Close}},
             //{Strategy::Repeat, {Trigger::ReceiveBuffer, State::Receive}},
@@ -65,7 +66,7 @@ public:
         };
 
         rules[State::Idle] = {
-            {Strategy::Continue, {Trigger::StopTransmission, State::Idle}},
+            {Strategy::Continue, {Trigger::IdleTransmission, State::Idle}},
             //{Strategy::Continue, {Trigger::StopTransmission, State::Stop}},
         };
     }

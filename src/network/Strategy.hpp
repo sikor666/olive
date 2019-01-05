@@ -15,6 +15,7 @@ enum class Strategy : int
     Repeat = 1,
     Reconnect = 2,
     Disconnect = 3,
+    Listen = 4,
 };
 
 class IStrategy

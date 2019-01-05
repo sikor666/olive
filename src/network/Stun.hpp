@@ -5,7 +5,6 @@
 #include "Protocol.hpp"
 #include "Socket.hpp"
 
-#include "Oliv.hpp"
 #include "Serv.hpp"
 
 #include <iostream>
@@ -158,9 +157,13 @@ struct StunAddrVariable
 class StunStrategy final : public IStrategy
 {
 public:
+    StunStrategy(Strategy strategy_) : strategy{ strategy_ }
+    {
+    }
+
     virtual Strategy policy() override
     {
-        return Strategy::Continue;
+        return strategy;
     }
 
     virtual void connect(Nodes& nodes) override
@@ -178,6 +181,9 @@ public:
     std::string port;
     std::string address;
 
+private:
+    Strategy strategy;
+
     /*virtual Origin origin() override
     {
         return Origin::Stun;
@@ -189,14 +195,59 @@ class Stun final : public INode
 public:
     Stun(const char *host_, const char *port_) :
         host{ host_ },
-        port{ port_ },
-        state{ State::Connect }
+        port{ port_ }
     {
+        state.addTrigger(Trigger::ConnectHost, [&]() {
+            socket.connect(host, port);
+            socket.unblock();
+            return std::make_unique<StunStrategy>(Strategy::Continue);
+        });
+
+        state.addTrigger(Trigger::SendBuffer, [&]() {
+            auto request = createRequest();
+            SocketAddress endpoint;
+            socket.send_to(request.data(), request.size(), endpoint);
+            stat[endpoint].scounter++;
+            return std::make_unique<StunStrategy>(Strategy::Continue);
+        });
+
+        state.addTrigger(Trigger::ReceiveBuffer, [&]() {
+            SocketAddress endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+            if (n)
+            {
+                stat[endpoint].rcounter++;
+                auto response = parseResponse({ buffer, buffer + n });
+                return response;
+            }
+            return std::make_unique<StunStrategy>(Strategy::Repeat);
+        });
+
+        state.addTrigger(Trigger::IdleTransmission, [&]() {
+            SocketAddress endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+            if (n)
+            {
+                OlivHeader header;
+                Buffer request{ buffer, buffer + n };
+                bufferRead(request, header);
+                stat[endpoint].name = header.name;
+                stat[endpoint].rcounter++;
+                memcpy(header.name, HostName.c_str(), HostName.size());
+                Buffer response;
+                bufferInsert(response, header);
+                socket.send_to(response.data(), response.size(), endpoint);
+                stat[endpoint].scounter++;
+            }
+            return std::make_unique<ServStrategy>(Strategy::Continue);
+        });
     }
 
     virtual std::unique_ptr<IStrategy> poll() override
     {
-        switch (state)
+        return state.changeState();
+
+        /*switch (state)
         {
         case State::Connect:
         {
@@ -264,7 +315,7 @@ public:
         }
         }
 
-        return std::make_unique<StunStrategy>();
+        return std::make_unique<StunStrategy>();*/
     }
 
     virtual std::string print() override
@@ -363,7 +414,7 @@ private:
                         if (type == AttributeType::XorMappedAddress ||
                             type == AttributeType::XorMappedAddress2)
                         {
-                            auto response = std::make_unique<StunStrategy>();
+                            auto response = std::make_unique<StunStrategy>(Strategy::Listen);
 
                             response->port = std::to_string(port);
                             response->address = str;
@@ -383,14 +434,14 @@ private:
             }
         }
 
-        return std::make_unique<StunStrategy>();
+        return std::make_unique<StunStrategy>(Strategy::Disconnect);
     }
 
 private:
     const char *host;
     const char *port;
 
-    State state;
+    StateMachine state;
 
     UDP::Socket socket;
     UDP::Buffer buffer;

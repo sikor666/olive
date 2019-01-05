@@ -45,11 +45,6 @@ public:
         host{ host_ },
         port{ port_ }
     {
-        state.addTrigger(Trigger::CloseConnection, [&]() {
-            socket.disconnect();
-            return std::make_unique<OlivStrategy>(Strategy::Continue);
-        });
-
         state.addTrigger(Trigger::ConnectHost, [&]() {
             socket.connect(host.c_str(), port.c_str());
             socket.unblock();
@@ -80,6 +75,11 @@ public:
                 stat[endpoint].rcounter++;
                 return parseResponse(std::move(response));
             }
+            return std::make_unique<OlivStrategy>(Strategy::Repeat);
+        });
+
+        state.addTrigger(Trigger::CloseConnection, [&]() {
+            socket.disconnect();
             return std::make_unique<OlivStrategy>(Strategy::Continue);
         });
     }
