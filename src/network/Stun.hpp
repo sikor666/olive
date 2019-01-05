@@ -198,8 +198,7 @@ public:
             if (n)
             {
                 stat[endpoint].rcounter++;
-                auto response = parseResponse({ buffer, buffer + n });
-                return response;
+                return parseResponse({ buffer, buffer + n });
             }
             return std::make_unique<StunStrategy>(Strategy::Repeat);
         });
