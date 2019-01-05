@@ -8,12 +8,6 @@
 #include <map>
 #include <memory>
 
-enum class NodeAction : int
-{
-    Send,
-    Recv,
-};
-
 struct ActionDetails
 {
     std::string name = "        ";
