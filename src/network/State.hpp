@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Strategy.hpp"
+
 #include <functional>
 #include <map>
 #include <vector>
@@ -62,11 +64,10 @@ public:
         events[trigger] = event;
     }
 
-    std::unique_ptr<IStrategy> changeState()
+    void changeState()
     {
         auto strategy = events[rules[currentState][Strategy::Continue].first]();
         currentState = rules[currentState][strategy->policy()].second;
-        return strategy;
     }
 
 private:

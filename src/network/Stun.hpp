@@ -166,19 +166,6 @@ public:
         return strategy;
     }
 
-    virtual void connect(Nodes& nodes) override
-    {
-        if (!address.empty() && !port.empty())
-        {
-            nodes.push_back(std::make_unique<Serv>
-                (ServAddr, ServPort, address, port));
-        }
-    }
-
-    std::string name;
-    std::string port;
-    std::string address;
-
 private:
     Strategy strategy;
 };
@@ -186,9 +173,10 @@ private:
 class Stun final : public INode
 {
 public:
-    Stun(const char *host_, const char *port_) :
+    Stun(const char *host_, const char *port_, Nodes& nodes_) :
         host{ host_ },
-        port{ port_ }
+        port{ port_ },
+        nodes{ nodes_ }
     {
         state.addTrigger(Trigger::ConnectHost, [&]() {
             socket.connect(host, port);
@@ -236,9 +224,9 @@ public:
         });
     }
 
-    virtual std::unique_ptr<IStrategy> poll() override
+    virtual void poll() override
     {
-        return state.changeState();
+        state.changeState();
     }
 
     virtual std::string print() override
@@ -337,14 +325,14 @@ private:
                         if (type == AttributeType::XorMappedAddress ||
                             type == AttributeType::XorMappedAddress2)
                         {
-                            auto response = std::make_unique<StunStrategy>(Strategy::Listen);
+                            std::string serv = std::to_string(port);
+                            std::string address = str;
+                            nodes.push_back(std::make_unique<Serv>
+                                (ServAddr, ServPort, address, serv, nodes));
 
-                            response->port = std::to_string(port);
-                            response->address = str;
+                            PublicSocket = address + ":" + serv;
 
-                            PublicSocket = response->address + ":" + response->port;
-
-                            return response;
+                            return std::make_unique<StunStrategy>(Strategy::Listen);
                         }
                     }
                 }
@@ -370,4 +358,5 @@ private:
     UDP::Buffer buffer;
 
     Stats stat;
+    Nodes& nodes;
 };

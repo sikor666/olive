@@ -13,7 +13,7 @@ class Client
 public:
     Client()
     {
-        nodes.push_back(std::make_unique<Stun>(StunAddr, StunPort));
+        nodes.push_back(std::make_unique<Stun>(StunAddr, StunPort, nodes));
     }
 
     void add(std::string name, std::string host, std::string port)
@@ -34,9 +34,7 @@ public:
             {
                 stream << node->print();
 
-                auto strategy = node->poll();
-
-                strategy->connect(nodes);
+                node->poll();
             }
 
             static size_t streamSize = 0;

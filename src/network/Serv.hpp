@@ -25,17 +25,8 @@ public:
         return strategy;
     }
 
-    virtual void connect(Nodes& nodes) override
-    {
-        for (auto socket : sockets)
-        {
-            nodes.push_back(std::make_unique<Oliv>
-                (socket.name, socket.address, socket.port));
-        }
-    }
-
+public:
     std::string name;
-    std::list<ServAddress> sockets;
 
 private:
     Strategy strategy;
@@ -44,11 +35,13 @@ private:
 class Serv final : public INode
 {
 public:
-    Serv(const char *host_, const char *port_, std::string h_, std::string p_) :
+    Serv(const char *host_, const char *port_,
+         std::string h_, std::string p_, Nodes& nodes_) :
         host{ host_ },
         port{ port_ },
         h{ h_ },
-        p{ p_ }
+        p{ p_ },
+        nodes{ nodes_ }
     {
         state.addTrigger(Trigger::ConnectHost, [&]() {
             socket.connect(host, port);
@@ -70,9 +63,9 @@ public:
             if (n)
             {
                 stat[endpoint].rcounter++;
-                auto response = parseResponse({ buffer, buffer + n });
-                stat[endpoint].name = response->name;
-                return response;
+                auto strategy = parseResponse({ buffer, buffer + n });
+                stat[endpoint].name = strategy->name;
+                return strategy;
             }
             return std::make_unique<ServStrategy>(Strategy::Repeat);
         });
@@ -87,9 +80,9 @@ public:
         });
     }
 
-    virtual std::unique_ptr<IStrategy> poll() override
+    virtual void poll() override
     {
-        return state.changeState();;
+        state.changeState();;
     }
 
     virtual std::string print() override
@@ -123,21 +116,21 @@ private:
 
     std::unique_ptr<ServStrategy> parseResponse(Buffer&& recvline)
     {
-        auto response = std::make_unique<ServStrategy>(Strategy::Disconnect);
+        auto strategy = std::make_unique<ServStrategy>(Strategy::Disconnect);
 
         ServerHeader header;
         bufferRead(recvline, header);
 
-        response->name = header.name;
+        strategy->name = header.name;
 
         for (size_t i = 0; i < header.size; i++)
         {
             ServerBody body;
             bufferRead(recvline, body);
-            response->sockets.push_back({ body.name, body.addr, body.port });
+            nodes.push_back(std::make_unique<Oliv>(body.name, body.addr, body.port));
         }
 
-        return response;
+        return strategy;
     }
 
 private:
@@ -153,4 +146,5 @@ private:
     UDP::Buffer buffer;
 
     Stats stat;
+    Nodes& nodes;
 };

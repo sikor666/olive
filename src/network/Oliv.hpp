@@ -6,6 +6,7 @@
 #include "Socket.hpp"
 #include "Stun.hpp"
 #include "State.hpp"
+#include "Strategy.hpp"
 
 class OlivStrategy final : public IStrategy
 {
@@ -19,17 +20,8 @@ public:
         return strategy;
     }
 
-    virtual void connect(Nodes& nodes) override
-    {
-
-    }
-
 private:
     Strategy strategy;
-
-    std::string name;
-    std::string port;
-    std::string address;
 };
 
 class Oliv final : public INode
@@ -79,9 +71,9 @@ public:
         });
     }
 
-    virtual std::unique_ptr<IStrategy> poll() override
+    virtual void poll() override
     {
-        return state.changeState();
+        state.changeState();
     }
 
     virtual std::string print() override
