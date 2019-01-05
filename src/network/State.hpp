@@ -64,7 +64,7 @@ public:
         events[trigger] = event;
     }
 
-    void changeState()
+    void runTrigger()
     {
         auto strategy = events[rules[currentState][Strategy::Continue].first]();
         currentState = rules[currentState][strategy->policy()].second;

@@ -82,7 +82,7 @@ public:
 
     virtual void poll() override
     {
-        state.changeState();;
+        state.runTrigger();;
     }
 
     virtual std::string print() override
