@@ -30,11 +30,6 @@ private:
     std::string name;
     std::string port;
     std::string address;
-
-    /*virtual Origin origin() override
-    {
-        return Origin::Oliv;
-    }*/
 };
 
 class Oliv final : public INode

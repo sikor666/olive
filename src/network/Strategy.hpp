@@ -2,13 +2,6 @@
 
 #include "Protocol.hpp"
 
-/*enum class Origin : int
-{
-    Stun,
-    Serv,
-    Oliv,
-};*/
-
 enum class Strategy : int
 {
     Continue = 0,
@@ -21,7 +14,6 @@ enum class Strategy : int
 class IStrategy
 {
 public:
-    //virtual Origin origin() = 0;
     virtual Strategy policy() = 0;
     virtual void connect(Nodes& nodes) = 0;
 

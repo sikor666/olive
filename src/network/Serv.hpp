@@ -27,8 +27,6 @@ public:
 
     virtual void connect(Nodes& nodes) override
     {
-        //auto servr = dynamic_cast<ServResponse *>(response.get());
-
         for (auto socket : sockets)
         {
             nodes.push_back(std::make_unique<Oliv>
@@ -41,11 +39,6 @@ public:
 
 private:
     Strategy strategy;
-
-    /*virtual Origin origin() override
-    {
-        return Origin::Serv;
-    }*/
 };
 
 class Serv final : public INode
@@ -97,62 +90,6 @@ public:
     virtual std::unique_ptr<IStrategy> poll() override
     {
         return state.changeState();;
-
-        /*switch (state)
-        {
-        case State::Close:
-        {
-            socket.connect(host, port);
-            socket.unblock();
-            state = State::Connect;
-            //std::cout << "Serv connect " << host << ":" << port << std::endl;
-            break;
-        }
-        case State::Connect:
-        {
-            auto request = createRequest();
-
-            SocketAddress endpoint;
-            socket.send_to(request.data(), request.size(), endpoint);
-            state = State::Send;
-            //std::cout << "Serv send_to " << endpoint << std::endl;
-            stat[endpoint].scounter++;
-            break;
-        }
-        case State::Send:
-        {
-            SocketAddress endpoint;
-            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                //std::cout << "Serv recv_from " << endpoint << std::endl;
-                stat[endpoint].rcounter++;
-
-                auto response = parseResponse({ buffer, buffer + n });
-                state = State::Receive;
-
-                stat[endpoint].name = response->name;
-
-                return response;
-            }
-
-            break;
-        }
-        case State::Receive:
-        {
-            //SocketAddress endpoint;
-            //int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-            //if (n)
-            //{
-            //    //std::cout << "Serv State::Recv " << endpoint << std::endl;
-            //    stat[endpoint].rcounter++;
-            //}
-            break;
-        }
-        }
-
-        return {};*/
     }
 
     virtual std::string print() override

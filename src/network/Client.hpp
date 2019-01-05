@@ -37,29 +37,6 @@ public:
                 auto strategy = node->poll();
 
                 strategy->connect(nodes);
-
-                /*auto response = node->poll();
-
-                if (response)
-                {
-                    if (response->origin() == Origin::Stun)
-                    {
-                        auto stunr = dynamic_cast<StunResponse *>(response.get());
-
-                        nodes.push_back(std::make_unique<Serv>
-                            (ServAddr, ServPort, stunr->address, stunr->port));
-                    }
-                    else if (response->origin() == Origin::Serv)
-                    {
-                        auto servr = dynamic_cast<ServResponse *>(response.get());
-
-                        for (auto socket : servr->sockets)
-                        {
-                            nodes.push_back(std::make_unique<Oliv>
-                                (socket.name, socket.address, socket.port));
-                        }
-                    }
-                }*/
             }
 
             static size_t streamSize = 0;

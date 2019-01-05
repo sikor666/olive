@@ -168,8 +168,6 @@ public:
 
     virtual void connect(Nodes& nodes) override
     {
-        //auto stunr = dynamic_cast<StunResponse *>(response.get());
-
         if (!address.empty() && !port.empty())
         {
             nodes.push_back(std::make_unique<Serv>
@@ -183,11 +181,6 @@ public:
 
 private:
     Strategy strategy;
-
-    /*virtual Origin origin() override
-    {
-        return Origin::Stun;
-    }*/
 };
 
 class Stun final : public INode
@@ -246,76 +239,6 @@ public:
     virtual std::unique_ptr<IStrategy> poll() override
     {
         return state.changeState();
-
-        /*switch (state)
-        {
-        case State::Connect:
-        {
-            socket.connect(host, port);
-            socket.unblock();
-            state = State::Send;
-            //std::cout << "Stun connect " << host << ":" << port << std::endl;
-            break;
-        }
-        case State::Send:
-        {
-            auto request = createRequest();
-
-            SocketAddress endpoint;
-            socket.send_to(request.data(), request.size(), endpoint);
-            state = State::Receive;
-            //std::cout << "Stun send_to " << endpoint << std::endl;
-            stat[endpoint].scounter++;
-            break;
-        }
-        case State::Receive:
-        {
-            SocketAddress endpoint;
-            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                //std::cout << "Stun recv_from " << endpoint << std::endl;
-                stat[endpoint].rcounter++;
-
-                auto response = parseResponse({ buffer, buffer + n });
-                state = State::Idle;
-
-                return response;
-            }
-
-            break;
-        }
-        case State::Idle:
-        {
-            SocketAddress endpoint;
-            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
-
-            if (n)
-            {
-                OlivHeader header;
-                Buffer request{ buffer, buffer + n };
-                bufferRead(request, header);
-
-                stat[endpoint].name = header.name;
-
-                //std::cout << "Stun State::Recv " << endpoint << std::endl;
-                stat[endpoint].rcounter++;
-
-                //std::string response = "ACK";
-                memcpy(header.name, HostName.c_str(), HostName.size());
-                Buffer response;
-                bufferInsert(response, header);
-                socket.send_to(response.data(), response.size(), endpoint);
-                //std::cout << "Stun send_to ACK " << endpoint << std::endl;
-                stat[endpoint].scounter++;
-            }
-
-            break;
-        }
-        }
-
-        return std::make_unique<StunStrategy>();*/
     }
 
     virtual std::string print() override

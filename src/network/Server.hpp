@@ -30,8 +30,6 @@ public:
 
             if (n)
             {
-                //std::cout << "Server endpoint " << endpoint << std::endl;
-
                 Buffer request{ buffer, buffer + n };
                 ServHeader header;
                 bufferRead(request, header);
@@ -54,7 +52,6 @@ public:
                 }
 
                 socket.send_to(response.data(), response.size(), endpoint);
-                //std::cout << "Server send_to " << endpoint << std::endl;
             }
 
 #if defined _WIN32
