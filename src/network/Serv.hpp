@@ -36,11 +36,11 @@ class Serv final : public INode
 {
 public:
     Serv(const char *host_, const char *port_,
-         std::string h_, std::string p_, Nodes& nodes_) :
+         std::string addr_, std::string serv_, Nodes& nodes_) :
         host{ host_ },
         port{ port_ },
-        h{ h_ },
-        p{ p_ },
+        addr{ addr_ },
+        serv{ serv_ },
         nodes{ nodes_ }
     {
         state.addTrigger(Trigger::ConnectHost, [&]() {
@@ -105,8 +105,8 @@ private:
 
         header.type = 1;
         memcpy(header.name, HostName.c_str(), sizeof(header.name));
-        memcpy(header.addr, h.c_str(), h.length());
-        memcpy(header.port, p.c_str(), p.length());
+        memcpy(header.addr, addr.c_str(), addr.length());
+        memcpy(header.port, serv.c_str(), serv.length());
 
         Buffer buffer;
         bufferInsert(buffer, header);
@@ -137,8 +137,8 @@ private:
     const char *host;
     const char *port;
 
-    std::string h;
-    std::string p;
+    std::string addr;
+    std::string serv;
 
     StateMachine state;
 
