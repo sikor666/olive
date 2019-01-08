@@ -76,6 +76,21 @@ public:
         });
 
         state.addTrigger(Trigger::IdleTransmission, [&]() {
+            SocketAddress endpoint;
+            int n = socket.ready() ? socket.recv_from(buffer, endpoint) : 0;
+            if (n)
+            {
+                OlivHeader header;
+                Buffer request{ buffer, buffer + n };
+                bufferRead(request, header);
+                stat[endpoint].name = header.name;
+                stat[endpoint].rcounter++;
+                memcpy(header.name, HostName.c_str(), HostName.size());
+                Buffer response;
+                bufferInsert(response, header);
+                socket.send_to(response.data(), response.size(), endpoint);
+                stat[endpoint].scounter++;
+            }
             return std::make_unique<ServStrategy>(Strategy::Continue);
         });
     }
@@ -116,7 +131,7 @@ private:
 
     std::unique_ptr<ServStrategy> parseResponse(Buffer&& recvline)
     {
-        auto strategy = std::make_unique<ServStrategy>(Strategy::Disconnect);
+        auto strategy = std::make_unique<ServStrategy>(Strategy::Listen);
 
         ServerHeader header;
         bufferRead(recvline, header);

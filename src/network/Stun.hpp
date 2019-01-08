@@ -253,9 +253,9 @@ private:
         *(&header.length) = htons(0x0000);      //Message Length : 0
         *(&header.cookie) = htonl(0x2112A442);  //Message Cookie : 2112a442
 
-        *(&header.tid[0]) = htonl(0x00000000);  //Message Transaction ID : 000000000000000000000000
-        *(&header.tid[1]) = htonl(0x00000000);  //Random
-        *(&header.tid[2]) = htonl(0x00000000);
+        *(&header.tid[0]) = htonl(std::stoul(generate_hex(4), nullptr, 16));  //Message Transaction ID : 000000000000000000000000
+        *(&header.tid[1]) = htonl(std::stoul(generate_hex(4), nullptr, 16));  //Random
+        *(&header.tid[2]) = htonl(std::stoul(generate_hex(4), nullptr, 16));
 
         Buffer buffer;
         bufferInsert(buffer, header);

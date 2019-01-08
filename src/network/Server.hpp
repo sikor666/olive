@@ -35,7 +35,15 @@ public:
                 bufferRead(request, header);
 
                 stuns.push_back(header);
-                client.add(header.name, header.addr, header.port);
+                auto found = endpoint.find(':');
+                std::string addr = endpoint.substr(0, found);
+                std::string port = endpoint.substr(found + 1);
+                bzero(header.addr, sizeof(header.addr));
+                bzero(header.port, sizeof(header.port));
+                memcpy(header.addr, addr.c_str(), addr.size());
+                memcpy(header.port, port.c_str(), port.size());
+                stuns.push_back(header);
+                //client.add(header.name, header.addr, header.port);
 
                 Buffer response;
                 ServerHeader h;
